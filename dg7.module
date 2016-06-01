@@ -1,0 +1,1465 @@
+<?php
+
+// $Id$  dg7.module
+
+/**
+ * Custom code module for functions written specifically for Digital.Grinnell.edu.
+ * @see https://digital.grinnell.edu
+ *
+ * Authors:  Mark A. McFate
+ *
+ * On 08-Feb-2016 the session_cache module was implemented here and all $_SESSION
+ * variable put and fetch operations were modified to use the session_cache_set($bin, $data)
+ * and session_cache_get($bin) functions.
+ *
+ */
+
+define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollection_uri_ms');
+
+/**
+ * Important!
+ *
+ * In order to function correctly, ALL of the search options defined below
+ * in both dg7_default_search_options() and dg7_special_islandora_solr_collection_search_alter()
+ * MUST also be contained in the configuration settings for the Advanced Search Block found
+ * at admin/islandora/search/islandora_solr/settings.  This admin overlay also
+ * is where default search term labels are set and where search permissions are
+ * determined.
+ */
+
+/**
+ * Implements hook_webform_submission_actions for Digital Grinnell.
+ *
+ * Provides links to frequently used admin functions.
+ *
+ * @TODO: This function should be moved to islandora_webform_webform_submission_actions.
+ *
+ */
+function dg7_webform_submission_actions($node, $submission) {
+  $actions= array();
+
+  // https://digitalx.grinnell.edu/islandora_webform_submission/ingest/76?destination=node/1934626/submission/76
+
+  if (webform_results_access($node)) {
+    $actions['submissions'] = array(
+      'title' => t('List ALL Submissions'),
+      'href' => 'islandora/object/' . $submission->islandora_object->id . '/submissions',
+      'query' => drupal_get_destination(),
+    );
+    $actions['ingest'] = array(
+      'title' => t('Ingest this Submission'),
+      'href' => 'islandora_webform_submission/ingest/' . $submission->sid . '?destination=node/' . $node->vid . '/submission/' . $submission->sid,
+      'query' => drupal_get_destination(),
+    );
+  }
+
+  return $actions;
+}
+
+
+/**
+ * Implements hook_preprocess_theme().
+ *
+ * Lifted from the thread at
+ * https://groups.google.com/forum/#!searchin/islandora/mods$20display$20bookreader/islandora/PDjLlE_IrPk/H2Cjl38JeAgJ
+ *
+ */
+function dg7_preprocess_islandora_internet_archive_bookreader(array &$variables) {
+  module_load_include('inc', 'islandora_internet_archive_bookreader', 'includes/utilities');
+  $object = $variables['object'];
+
+  // Add the following two lines of code (and corresponding additions to
+  //   ../sites/default/modules/contrib/islandora_mods_display/theme/islandora-mods-display-display-template.tpl.php
+  // to facilitate MODS Metadata display below the bookreader widget...just
+  // like all other content types.
+
+  module_load_include('inc', 'islandora', 'includes/metadata');
+  $variables['metadata'] = islandora_retrieve_metadata_markup($object);
+}
+
+/**
+ * Implements hook_preprocess( ).
+ *
+ * This is a good place to implement custom pre- or post-processing for
+ * ingest operations.
+ *
+ * @param array &$variables
+ *   Array of variables passed to the hook.  If applicable, the Islandora object
+ *   PID being processed is held in $variables['islandora_object']->objectId.
+ * @param string $hook
+ *   The name of the module calling this instance of the hook.  For Islandora ingest
+ *   this value will be something like 'islandora_large_image', or the name of
+ *   some other Islandora solution pack.
+ *
+ */
+function dg7_preprocess(&$variables, $hook) {
+  return;
+  /*
+  static $previous;
+
+  $is_islandora = (stripos("_$hook", 'islandora_') === 1);
+  if ($is_islandora) {
+    $pid = (isset($variables['islandora_object']) ? $variables['islandora_object']->id : 'Undefined');
+
+    drupal_set_message(__FUNCTION__ . ' called for ' . $hook . ' with PID = '.$pid, 'status');
+
+    switch ($hook) {
+      case 'islandora_basic_image':
+      case 'islandora_audio':
+      case 'islandora_large_image':
+      case 'islandora_binary_object':
+      case 'islandora_book':
+      case 'islandora_pdf':
+      case 'islandora_video':
+      case 'islandora_web_archive':
+
+        // Many operations call this hook twice.  The following logic is included for
+        // cases where only ONE response is necessary.
+
+        $thisTime = $hook.'_'.$pid;
+
+        if ($thisTime != $previous) {    // only do the following ONCE per object!
+          drupal_set_message(__FUNCTION__ . ' responding to ' . $hook . ' with PID = '.$pid, 'status');
+          $previous = $thisTime;
+
+          // Check for an existing MODS record.  If one exists, see if the object has a handle yet.
+
+          if (isset($variables['islandora_object']->datastreams['MODS'])) {
+
+          };
+
+        }
+        break;
+    }
+
+  }
+  return;  */
+}
+
+
+/**
+ * Implements hook_islandora_solr_query_result( ).
+ *
+ * @param array $result
+ *
+ * @TODO...This doesn't work due to paging!
+ *
+function dg7_islandora_solr_query_result(array $result) {
+
+  // Look in reverse for any response docs where...
+  // $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] = info:fedora/islandora:collectionCModel
+
+  // If one is found, pop it to the top of the list and continue.
+
+  $i = count($result['response']['docs']);
+  while ($i) {
+    if ($collection = (isset($result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s']) ?
+      $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] : FALSE) === 'info:fedora/islandora:collectionCModel') {
+        _move_to_top($result['response']['docs'], $i);
+    }
+    $i--;
+  }
+  return;
+}
+
+/**
+ * Helper functions for above.
+ *
+ * @param $array
+ * @param $key
+ *
+function _move_to_top(&$array, $key) {
+  $temp = array($key => $array[$key]);
+  unset($array[$key]);
+  $array = $temp + $array;
+}
+
+function _move_to_bottom(&$array, $key) {
+  $value = $array[$key];
+  unset($array[$key]);
+  $array[$key] = $value;
+}
+
+*/
+
+
+/**
+ * Implements hook_form_alter.
+ *
+ * This function implements hook_form_alter with intent to change the behavior
+ * of the Advanced Search form/block and others in Digital Grinnell.
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function dg7_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  // The big switch...
+  switch($form_id) {
+
+    // User login and register forms.
+    // case 'user_login':     // MAM...20-Jan-2016... Do NOT block the user/login page!
+    case 'user_register_form':
+      if ($user->uid != '1') {
+        $form['#access'] = FALSE;
+        drupal_add_http_header('Status', '410 Gone');
+        exit(); // may want drupal_exit instead; not sure of other hook_inits()s should run
+      }
+      break;
+
+    // islandora_solr_advanced_search_form.
+    case 'islandora_solr_advanced_search_form':
+      dg7_islandora_solr_advanced_search_form_alter_helper($form);
+      break;
+  }
+
+  return;
+}
+
+/**
+ * Helper function for dg7_form_alter.
+ *
+ * @TODO... add a 'search help' link to the bottom of the form/block.
+ *
+ * @param $form
+ *   The target form array.
+ */
+function dg7_islandora_solr_advanced_search_form_alter_helper(&$form) {
+  module_load_include('inc', 'islandora_solr_collection_search', 'islandora_solr_collection_search');
+
+  // Find the current collection scope, if any...
+  if (module_exists('islandora_solr_collection_search')) {
+    // islandora_solr_collection_search_sync( );
+    // $scope = (isset($_SESSION['islandora_solr_collection_search']['collection']) ? $_SESSION['islandora_solr_collection_search']['collection'] : FALSE);
+    $scope = session_cache_get('islandora_solr_collection_search-collection');
+  }
+  else {
+    $scope = dg7_solr_collection_search_sync();
+  }
+
+  // Reset the $form['terms'][x]['field'['#options'] to their default values (as configured in
+  // the Advanced Search block portion of #overlay=admin/islandora/search/islandora_solr/settings).
+  foreach ($form['terms'] as $index => &$term) {
+    if (is_int($index) && $term['field']['#type'] === 'select') {   // find any/all 'select' fields to alter, and remove them
+      unset($term['field']['#options']);
+      $term['field']['#options'] = islandora_solr_get_fields('search_fields');
+    }
+  }
+
+  // Now, loop through each search term and set or unset options which are collection-specific.
+  foreach ($form['terms'] as $index => &$term) {
+    if (is_int($index) && $term['field']['#type'] === 'select') {   // find any/all 'select' fields to alter
+
+      // The following switch/case statements should, based on collection, remove (unset) configured
+      // fields that should be hidden, and it can be used to change the label of particular fields.
+      // That is ALL.  Don't define additional fields here!
+
+      switch ($scope) {   // Switch on $scope (collection).
+        case 'grinnell:faulconer':               // The Faulconer Art collection
+        case 'grinnell:faulconer-suppressed':    // Suppressed Faulconer Art
+        case 'grinnell:soviet-graphic-art':      // The Faulconer's Soviet Graphic Art collection
+        case 'grinnell:recent-art-acquisitions': // The Faulconer's Recent Acquisitions collection
+          unset($term['field']['#options']['dc.description']); // Abstract
+          unset($term['field']['#options']['dc.coverage']); // Coverage
+          unset($term['field']['#options']['dc.relation']); // Relations
+          $term['field']['#options']['dc.contributor'] = "Artist";
+          $term['field']['#options']['mods_subject_topic_mt'] = "Nationality";
+          break;
+
+        default:        // If none of the above...leave the defaults intact minus the Faulconer specific stuff.
+          unset($term['field']['#options']['mods_relatedItem_admin_note_location_mt']); // Location
+          unset($term['field']['#options']['mods_physicalDescription_form_mt']); // Medium
+          unset($term['field']['#options']['mods_identifier_local_ms']); // Accession Number
+          unset($term['field']['#options']['mods_note_credits_mt']);  // Credit Line
+          break;
+      }
+    }
+  }
+
+  // Last order of business...if we are in a collection scope, add the checkbox control.
+  if ($scope && module_exists('islandora_solr_collection_search')) {
+    islandora_solr_collection_search_form_add_scope_control($scope, $form, $form_state);
+  }
+
+  return;
+}
+
+
+/**
+ * Returns associated collection PID (or label) from the page request, or FALSE
+ * if we are not in a collection object or collection search page.
+ *
+ * This is a dg7 copy of islandora_solr_collection_search_sync.  As such it
+ * provides and tracks its own $_SESSION variable.
+ *
+ * This function is NOT NEEDED if the islandora_solr_collection_search module is
+ * installed and enabled.
+ *
+ */
+function dg7_solr_collection_search_sync( ) {
+  global $user;
+  static $previous;
+
+  $page = $_GET['q'];
+
+  // If this is an ajax call...return NULL since $_SESSION is unreliable.
+  if ($page === 'system/ajax') {
+    // $pid = $_SESSION['dg7']['collection'];
+    $pid = session_cache_get('dg7-collection');
+    // drupal_set_message(__FUNCTION__." -ajax call- returning ".$pid, 'status');
+    return $pid;
+  }
+
+  // If this is the same page and user as last request...make a quick exit.
+  if (!is_null($previous)) {
+    if ($previous['uid'] = $user->uid && $previous['page'] = $page && isset($previous['pid'])) {
+      // drupal_set_message(__FUNCTION__." -previous- returning ".$previous['pid'], 'status');
+      // $_SESSION['dg7']['collection'] = $previous['pid'];
+      if ($user->uid > 0) { session_cache_set('dg7-collection', $previous['pid']); }
+      return $previous['pid'];
+    }
+  }
+
+  // Save some data for the next call to this function.
+  $previous['page'] = $page;
+  $previous['uid'] = $user->uid;
+
+  ////////////////////////////////////////////////////////////////////////
+  // Need some operations to 'reset' things and get them back in sync.
+
+  // One such operation is any visit to the <front> page.  If we landed there unset $_SESSION[$_module].
+  if (drupal_is_front_page( )) {
+    $previous['pid'] = $pid = FALSE;
+    // drupal_set_message(__FUNCTION__." -front page- returning FALSE", 'status');
+    // $_SESSION['dg7']['collection'] = $pid;
+    if ($user->uid > 0) { session_cache_set('dg7-collection', $pid); }
+    return $pid;
+  }
+
+  // Another such operation is any visit to the default or 'base' search page...
+  $base = variable_get('islandora_solr_base_query', '*:*');
+  if ($page === 'islandora/search/'.$base) {
+    $previous['pid'] = $pid = FALSE;
+    // drupal_set_message(__FUNCTION__." -base query- returning FALSE", 'status');
+    // $_SESSION['dg7']['collection'] = $pid;
+    if ($user->uid > 0) { session_cache_set('dg7-collection', $pid); }
+    return $pid;
+  }
+
+  // Examine the address of the page we're on, and if it is a collection-related page...return so.
+  // If preg_match === 1 then we have identified a probable /islandora/object/<collection> page.
+  // Return the collection PID that was found.
+  $matches = array( );
+  $pattern1 = '/^islandora\/object\/(\w+)\:(\D+)$/';  // Tests for an object page with a non-numeric PID...it's a collection!
+  if (preg_match($pattern1, $page, $matches) === 1) {
+    if ($matches[1] === 'islandora' && $matches[2] === 'root') {   // if we matched islandora:root... return FALSE.
+      // drupal_set_message(__FUNCTION__." -root collection- returning ".$previous['pid'], 'status');
+      // $_SESSION['dg7']['collection'] = FALSE;
+      if ($user->uid > 0) { session_cache_set('dg7-collection', FALSE); }
+      return ($previous['pid'] = FALSE);
+    }
+    $previous['pid'] = $pid = $matches[1] . ':' . $matches[2];
+    // drupal_set_message(__FUNCTION__." -islandora object- returning ".$pid, 'status');
+    // $_SESSION['dg7']['collection'] = $pid;
+    if ($user->uid > 0) { session_cache_set('dg7-collection', $pid); }
+    return $pid;
+  }
+
+  // Nope, check for a $pattern2 match...
+  // If preg_match === 1 here then we found an /islandora/search/ page.  Preserve the status quo.
+  $pattern2 = '/^islandora\/search\//';  // Tests for any search page...
+  if (preg_match($pattern2, $page) === 1 && ($user->uid > 0)) {
+    // If we already have collection_search control return information from it.
+    // $pid = $_SESSION['dg7']['collection'] = (isset($previous['pid']) ? $previous['pid'] : FALSE );
+    $pid = session_cache_set('dg7-collection', (isset($previous['pid']) ? $previous['pid'] : FALSE ));
+    // drupal_set_message(__FUNCTION__." -islandora search- returning ".$pid, 'status');
+    return $pid;
+  }
+
+  // If we are anywhere else, unset the $_SESSION variable and return FALSE.
+  // drupal_set_message(__FUNCTION__." -reset- returning FALSE", 'status');
+  // $_SESSION['dg7']['collection'] = FALSE;
+  if ($user->uid > 0) { session_cache_set('dg7-collection', FALSE); }
+
+  return ($previous['pid'] = $pid = FALSE);
+}
+
+
+
+/**
+ * Implements hook_islandora_solr_query_alter().
+ *
+ * The hook implementation does two things:
+ * 1) Sets the implict Solr search behavior to AND instead of OR.
+ * 2) Sets collection-specific sort order when the query has a collection focus.
+ *
+ * @param $isq
+ *   The IslandoraSolrQueryProcessor passed by reference.
+ */
+function dg7_islandora_solr_query_alter(&$isq) {
+
+  // Set the AND operator.
+  $isq->solrParams['q.op'] = 'AND';
+
+  // Determine if this is a collection query.
+  $collection = FALSE;
+  if (isset($isq->internalSolrParams['f'])) {
+    foreach ($isq->solrParams['fq'] as $fq) {
+      if (strstr($fq, 'RELS_EXT_isMemberOfCollection')) {
+        list(, $tail) = explode('/', $fq);
+        $collection = str_replace('\\', '', $tail);
+        /* $msg = __FUNCTION__ . ' called with collection = ' . $collection;
+        drupal_set_message($msg, 'status'); */
+        break;
+      }
+    }
+  }
+
+  // Now, set the sort order.  Note that sort should be a csv string, not an array!
+  $isq->solrParams['sort'] = 'dg_primarySort_s asc';  // everything sorts by dg_primarySort_s first!
+
+  switch ($collection) {
+
+    // Sort by date then label.
+
+    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':  // The Early College History collection
+    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
+    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      break;
+
+    // Sort by creators(s), then date, then label.
+
+    case 'grinnell:gic':                      // The Grinnell In China collection
+    case 'grinnell:faculty-scholarship':      // The Faculty Scholarship collection
+    case 'grinnell:student-scholarship':      // The Student Scholarship collection
+    case 'grinnell:curricular-materials':     // The Syllabi and Curricular Materials collection
+    case 'grinnell:faulconer':                // The Faulconer Art collection
+    case 'grinnell:soviet-graphic-art':       // The Faulconer's Soviet Graphic Art sub-collection
+    case 'grinnell:recent-art-acquisitions':  // The Faulconer's Recent Acquisitions sub-collection
+    case 'grinnell:faulconer-suppressed':
+      $isq->solrParams['sort'] .= ', dg_creators_s asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      break;
+
+    // Sort by label then date.
+
+    default:   // Not entering a specialized collection.
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      break;
+  }
+
+  return;
+}
+
+/**
+ * Implements hook_views_api( ).
+ *
+ */
+function dg7_views_api( ) {
+  $return = array(
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'dg7') . '/includes/views',
+  );
+  return $return;
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ *
+ * This code tells Drupal to override the islandora-solr-teaser.tpl.php file with
+ * a copy found in this module's "templates" folder.  Pulled (and corrected) from
+ * http://www.midwesternmac.com/blogs/jeff-geerling/overriding-template-file
+ *
+ */
+function dg7_theme_registry_alter(&$theme_registry) {
+  // Override the default islandora-solr-teaser.tpl.php with our own.
+  if (isset($theme_registry['islandora_solr_teaser'])) {
+    $module_path = drupal_get_path('module', 'dg7');
+    // $theme_registry['islandora_solr_teaser']['theme path'] = $module_path;
+    $theme_registry['islandora_solr_teaser']['path'] = $module_path;
+    // $theme_registry['islandora_solr_teaser']['template'] = $module_path . '/templates/islandora-solr-teaser';
+    $theme_registry['islandora_solr_teaser']['template'] = 'templates/islandora-solr-teaser';
+  }
+  return;
+}
+
+
+/**
+ * Implements hook_islandora_solr_views_query_alter.
+ *
+ * This CUSTOM hook is called from execute() in ..islandora_solr_views/islandora_solr_views_query.inc
+ *
+ * @param $view
+ * @param null $viewName
+ * @param null $cID
+ */
+function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL) {
+
+  // dsm($view);
+
+  // Not a 'collection' view or we didn't find a collection ID?  We're done.
+  if ($viewName != 'collection' || !$cID) { return; }
+  $id = str_ireplace('\\', '', $cID);
+
+  $view->orderby = array( );
+  $view->orderby['dg_primarySort_s'] = 'asc';  // everything sorts by dg_primarySort_s first!
+
+  switch ($id) {
+
+    // Sort by date then label.
+
+    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':  // The Early College History collection
+    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
+    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
+      $view->orderby['fgs_createdDate_dt'] = 'asc';
+      $view->orderby['fgs_label_s'] = 'asc';
+      break;
+
+    // Sort by creators(s), then date, then label.
+
+    case 'grinnell:gic':                    // The Grinnell In China collection
+    case 'grinnell:faculty-scholarship':    // The Faculty Scholarship collection
+    case 'grinnell:student-scholarship':    // The Student Scholarship collection
+    case 'grinnell:curricular-materials':   // The Syllabi and Curricular Materials collection
+    case 'grinnell:faulconer':              // The Faulconer Art collection
+    case 'grinnell:soviet-graphic-art':     // The Faulconer's Soviet Graphic Art sub-collection
+    case 'grinnell:faulconer-suppressed':
+      $view->orderby['dg_creators_s'] = 'asc';
+      $view->orderby['fgs_createdDate_dt'] = 'asc';
+      $view->orderby['fgs_label_s'] = 'asc';
+      break;
+
+    // Sort by label then date.
+
+    default:   // Not entering a specialized collection.
+      $view->orderby['fgs_label_s'] = 'asc';
+      $view->orderby['fgs_createdDate_dt'] = 'asc';
+      break;
+  }
+
+  return;
+}
+
+/**
+ * Implements hook_preprocess_THEME().
+ */
+function dg7_preprocess_islandora_solr_teaser(&$variables) {
+
+  // Add a creators_statement to be displayed.
+  if (isset($variables['values']['dc.creator'])) {
+    $val = '';
+    foreach ($variables['values']['dc.creator'] as $creator) {
+      $val .= $creator."; ";
+    }
+    $variables['values']['creators_statement'] = trim($val,'; ');
+  }
+
+  return;
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ * Moved to islandora_solr_collection_search.module on 27-Aug-2015.
+ */
+
+/**
+ * The following executes a SPARQL query via Tuque and returns the results as an associative array.
+ *
+ * @param string $query
+ *   The SPARQL query to be executed.
+ *
+ *
+function dg7_sparql_query($query) {
+  $tuque = islandora_get_tuque_connection( );
+  $results = $tuque->repository->ri->sparqlQuery($query);
+  return $results;
+}
+
+
+/**
+ * Build and execute Apache Solr query.
+ *
+ *
+function dg7_collection_list( ) {
+  $solr = new IslandoraSolrQueryProcessor( );
+
+  // Build and execute Apache Solr query.
+  $query = "RELS_EXT_isMemberOfCollection_uri_s:info\:fedora/islandora\:root";
+  $params['sort'] = 'fgs_label_s asc';
+  $params['fl'] = 'PID, fgs_label_s';
+
+  $solr->buildAndExecuteQuery($query, $params);
+
+  if (empty($solr->islandoraSolrResult)) {
+    return "Error searching Solr index in ".__FUNCTION__.".";
+  } else {
+    $objects = $solr->islandoraSolrResult['response']['objects'];
+    foreach ($objects as $array) {
+      $collections[$array['PID']] = $array['object_label'];
+    }
+  }
+  return $collections;
+}
+
+
+/*
+  global $user;
+
+  // Fetch some pertinent user data.
+
+  if ($user->uid != 0) {
+    $userClause = "(bound(?user) && ?user='{$user->name}') || ";
+  } else {
+    $userClause = " ";
+  }
+  $rc = "(bound(?role) && (?role = ";
+  foreach ($user->roles as $ur) {
+    $rc .= "'$ur' || ";
+  }
+  $rolesClause = trim($rc," |")."))";
+
+  $collection_query = <<<EOQ
+SELECT DISTINCT ?object ?title
+FROM <#ri>
+WHERE {
+?object ?collection_predicate <info:fedora/islandora:root> ;
+<fedora-model:label> ?title ;
+<fedora-model:hasModel> <info:fedora/islandora:collectionCModel> . ?object <fedora-model:state> <fedora-model:Active>
+OPTIONAL {{?object <info:fedora/fedora-system:def/relations-external#isConstituentOf> ?compound} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByRole> ?role} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByUser> ?user}}
+FILTER(regex(str(?object), "info:fedora/{$namespace}:"))
+FILTER(sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOf>))
+FILTER(!bound(?compound))
+FILTER((!bound(?role) && !bound(?user)) || {$userClause} (bound(?role) && ({$rolesClause})))
+} ORDER BY ?title
+EOQ;
+
+  $results = dg7_sparql_query($collection_query);
+  foreach ($results as $result) {
+    $id = $result['object']['value'];
+    list($ns,$collection) = explode(':',$id);
+    $search_collection = '*'.$collection;
+    // $collections[$search_collection] = $result['title']['value'];
+    $collections[$search_collection] = $collection;
+  }
+
+  return $collections;
+}
+
+/*  The following query was captured from the islandora_solr module as a SPARQL example which is permissions (XACML) aware.
+
+SELECT DISTINCT ?object ?title ?owner ?date_modified
+FROM <#ri>
+WHERE {
+  ?object ?collection_predicate <info:fedora/islandora:root> ;
+        <fedora-model:label> ?title ;
+        <fedora-model:ownerId> ?owner ;
+        <fedora-view:lastModifiedDate> ?date_modified ;
+        <fedora-model:hasModel> ?model . ?object <fedora-model:state> <fedora-model:Active> .
+  OPTIONAL {{?object <info:fedora/fedora-system:def/relations-external#isConstituentOf> ?compound} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByRole> ?role} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByUser> ?user}}
+  FILTER(regex(str(?object), "info:fedora/grinnell:")) FILTER(sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOf>)) FILTER(!bound(?compound)) FILTER((!bound(?role) && !bound(?user)) || (bound(?user) && ?user='anonymous') || (bound(?role) && (?role='anonymous user')))
+}ORDER BY ?title
+ */
+
+/**
+* Implementation of hook_help().
+*
+function dg7_help($path, $arg) {
+  switch ($path) {
+    case 'admin/modules#description':
+      return t('This module provides functions specifically written for Digital7.Grinnell.edu.' );
+    case 'admin/help#dg7':
+      $txt  = '<h3>Description:</h3><p>This module provides functions specifically written for Digital7.Grinnell.edu.</p>';
+      return t( $txt );
+  }
+}
+
+/**
+* Implementation of hook_perm().
+*
+function dg7_perm( ) {
+  return array(
+    'administer dg7',
+    'create dg7',
+    'delete dg7',
+    'delete dg7',
+    'edit dg7',
+    'edit own dg7'
+   );
+}
+
+/**
+* Implementation of hook_access().
+*
+function dg7_access($op, $node, $account) {
+  switch ($op) {
+    case 'create':
+      return user_access('create dg7', $account);
+      break;
+    case 'update':
+      return user_access('edit dg7', $account) || (user_access('edit own dg7', $account) && ($account->uid == $node->uid));
+      break;
+    case 'delete':
+      return user_access('delete dg7', $account) || (user_access('delete own dg7', $account) && ($account->uid == $node->uid));
+      break;
+  }
+}
+
+/**
+* Implementation of hook_init( ).
+*/
+function dg7_init( ) { return; }
+
+/**
+* Implementation of hook_cron( ).
+*/
+function dg7_cron( ) { return; }
+
+/**
+ * Set default advanced Solr search options for all 'select' controls.
+ *
+ * @param array $form
+ *   An associative array containing form structure.
+ * @param array $form_state
+ *   An associative array containing form state.
+ *
+function dg7_set_default_advanced_Solr_search_options(&$form, &$form_state) {
+  foreach ($form['terms'] as $index => &$term) {
+    if (is_int($index) && $term['field']['#type'] === 'select') {
+      $term['field']['#options'] = array();
+      $term['field']['#options']['catch_all_fields_mt'] = "Keyword";
+      $term['field']['#options']['dc.title'] = "Title";
+      $term['field']['#options']['dc.contributor'] = "Creator/Contributor";
+      $term['field']['#options']['dc.date'] = "Date Created";
+      $term['field']['#options']['mods_subject_topic_ms'] = "Subject";
+    }
+  }
+  return;
+}
+
+
+
+/**
+ * Fetches the collection selection from advanced form and returns it.
+ * Moved to islandora_solr_collection_search.module on 27-Aug-2015.
+ */
+
+
+/**
+ * Implements hook_islandora_basic_collection_get_query_statements().
+ *
+ * This hook adds dc:date as ?date, and dc:source as ?source to the usual query fields to
+ * support specialized sorting.
+ *
+ * Note that ALL objects MUST have a dc:date and dc:source field or they won't show up!
+ *
+ *
+function dg7_islandora_basic_collection_get_query_statements($type = 'view') {
+  $to_return = array( );
+  $to_return[ ] = <<<EOQ
+?object <dc:date> ?date ;
+        <dc:source> ?source
+EOQ;
+  return $to_return;
+}
+
+/**
+ * Implements hook_islandora_basic_collection_query_param_alter().
+ *
+ * This hook serves to alter the content and ultimately the sorted order of some
+ * collection views.
+ *
+ *
+function dg7_islandora_basic_collection_query_param_alter(array &$filters, array &$statements, array &$params, array &$optionals) {
+
+  if (list($collection,$search) = dg7_fetch_collection_selection( )) {
+
+     $params['vars'] .= ' ?source ?date';
+
+    // Set the Solr query based on the collection.
+
+    islandora_solr(ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE.':'.$search.' AND *:*');  // Query RELS_EXT by $collection
+
+    switch ($collection) {   // switch on $collection
+
+      case 'phpp':             // The Poweshiek History Preservation Project
+      case 'college-history':  // The Early College History collection
+      case 'jimmy-ley':        // The Jimmy Ley Collection
+        $params['order_by'] = '?date ?title';                                      // Sort by date then title
+        break;
+
+      case 'faculty-scholarship':   // The Faculty Scholarship collection
+      case 'student-scholarship':   // The Student Scholarship collection
+      case 'curricular-materials':  // The Syllabi and Curricular Materials collection
+      case 'faulconer':             // The Faulconer Art collection
+        $params['order_by'] = '?source ?title';                                  // Sort by source (creators) then title
+        break;
+
+      default:   // Not entering a specialized collection.  Check the breadcrumb to see if we are within one?
+        $trail = menu_get_active_breadcrumb();
+
+    }
+  }
+  return;
+}
+
+/**
+ * Generate a "Transcribe/Caption this Content" button for a specified object.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ * @param $tabToCopy
+ * @return bool|array
+ *
+ * @TODO...Temporarily disabled on 21-Oct-2015 since our transcribe feature is currently broken!
+ *
+ */
+function dg7_controls_transcribe($pid, $tabToCopy) {
+  return FALSE;
+  /* MAM added 'return FALSE;' on 03-DEC-2015 since it is NOT working and may be causing other issues?
+
+// Retrieve the target Fedora object or return FALSE.
+if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+// Get the MODS content in order to check for a transcription switch.
+if (empty($fedora_object['MODS'])) { return FALSE; }
+$mods = $fedora_object['MODS']->content;
+
+// Now deal with transcription.
+// Sample link: http://digital.grinnell.edu/drupal7/transcribe/transcribe2.php?pid=grinnell:214&title=john%20brown%20in%20grinnell
+$transcribable = FALSE;
+$tmods = trim($mods);
+// mods:mods/mods:relatedItem[@displayLabel="Transcribe This Item" and @type="constituent"]/mods:identifier[@type="uri"]';
+
+$xmods = new SimpleXMLElement($tmods);   // make MODS searchable via xpath
+$xpath = '/mods:mods/mods:relatedItem[@type="constituent"]/@displayLabel';
+
+$result = $xmods->xpath($xpath);
+if ($result) {
+  while (list($id, $attr) = each($result)) {
+    $transcribable = (strcmp($attr, 'Transcribe This Item') == 0);
+  }
+}
+
+// @TODO The following block of code does not work for non-admins because they do not
+// have permission to modify object datastreams!  The last line in the block throws an
+// exception.
+//
+//
+// if ($transcribable) {
+//   $transcribe = 'transcribe/transcribe2.php?pid='.rawurlencode($pid).'&title='.rawurlencode($fedora_object->label);
+//   // Modify the MODS relatedItem identifier where attribute displayLabel='Transcribe This Item' and update the datastream.
+//   foreach ($xmods->relatedItem as $rI) {
+//     $attr = $rI->attributes();
+//     if (strcmp($attr['displayLabel'], 'Transcribe This Item') == 0) {
+//       $rI->identifier = "/$transcribe";
+//       $fedora_object['MODS']->setContentFromString($xmods->asXML( ));
+//     }
+//   }
+// }
+
+// MAM changes per J Bauder request on 2013-12-03 to remove ALL window.close() calls for IE compatibility.
+//  For example, the first "addition" line was previously...
+//    $addition .= "<button class='dg_custom_controls' onClick=\"window.open('../../".$temp_file."'); window.close();\">Open a Printable Cover Sheet</button>";
+//
+
+if ($transcribable) {
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the transcription function.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $tab['#link']['title'] = "Transcribe/Caption This Content";
+  $transcribe = 'https://digitalx.grinnell.edu/transcribe/transcribe2.php?pid='.rawurlencode($pid).'&title='.rawurlencode($fedora_object->label);
+  $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenTranscriptionWindow('$transcribe')";  // This option is key to making this open as a new window!
+  return $tab;
+} else {
+  return FALSE;
+}
+
+return; */
+}
+
+/**
+* Generate an "Open a Cover Sheet" button for a specified object.
+*
+* This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+* ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+*
+* @param $pid
+* @param $tabToCopy
+* @return bool|array
+*/
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+  module_load_include('inc', 'csl', 'CSL');
+
+  // Retrieve the target Fedora object or return FALSE if there is none.
+  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+  // Get the MODS content
+  if (empty($fedora_object['MODS'])) { return FALSE; }
+  $content = $mods = $fedora_object['MODS']->content;
+
+  // Don't do this on collection pages!
+  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($content_models as $cm) {
+    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+  }
+
+  // Check for a cover sheet file already in place.  If it is not, create a new one.
+  $coverFile = "public://coversheets/$pid.xml";
+
+  if (!file_exists($coverFile)) {
+
+    // Retrieve the cover sheet transform.
+    $module_path = drupal_get_path('module', 'dg7');
+    $cs_path = $GLOBALS['base_url'] . "/$module_path/dgCoverSheet.xsl";
+
+    // First, remove all /mods:relatedItem[@type="admin"] notes from the XML before it is
+    // saved.  This data is NEVER to be exposed.
+    // Save ONLY the <mods> element and its children.  Do NOT save any <xml...> elements!
+
+    $xml = new DOMDocument;
+    $xml->loadXML($mods);
+    $dx = new DOMXPath($xml);
+    $relatedItems = $dx->query("/mods:mods/mods:relatedItem[@type='admin']");
+    foreach ($relatedItems as $rI) {
+      $rI->parentNode->removeChild($rI);
+      $content = $xml->saveXML( );
+    }
+
+    $xml->loadXML($content);
+    $dx = new DOMXPath($xml);
+    $roots = $dx->query("/mods:mods");
+    foreach ($roots as $root) {
+      $content = $xml->saveXML($root);
+      break;
+    }
+
+    // Write the MODS content to a file with the cover sheet transform declared within.
+
+    $styleSheet = "<?xml-stylesheet href='$cs_path' type='text/xsl'?> \r\n";
+    if (!file_save_data($styleSheet . $content, $coverFile, FILE_EXISTS_REPLACE)) {
+      return FALSE;
+    }
+  }
+
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the cover sheet function.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
+  $urlX = file_create_url($coverFile);
+  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
+  $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
+  return $tab;
+}
+
+/**
+ * Generate an "Add an Annotation" button for a specified object.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ * @param $tabToCopy
+ * @return bool|array
+ */
+function dg7_controls_add_an_annotation($pid, $tabToCopy) {
+  module_load_include('inc', 'csl', 'CSL');
+
+  // Retrieve the target Fedora object or return FALSE if there is none.
+  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+  // Get the WF datastream, if any
+  if (empty($fedora_object['WF'])) { return FALSE; }
+  $content = $wf = $fedora_object['WF']->content;
+  $webform = trim($content);
+
+  // Don't do this on collection pages!
+  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($content_models as $cm) {
+    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+  }
+
+  // Build the destination path ($url) here, then drupal_goto below.
+  $url = "/islandora_webform/retrieve_form/$webform/nojs?pid=$pid&destination=islandora/object/$pid";
+
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the annotation function.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $tab['#link']['title'] = "Add an Annotation";
+  $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenTranscriptionWindow('$url')";
+  return $tab;
+}
+
+
+/**
+ * Prints a line of AWSTATS information about a specified object in the $tabs2 space just below the custom buttons.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param string $pid - The specified object PID.
+ *
+ */
+function dg7_print_awstats($pid) {
+  list($visits6, $visits7, $downloads6, $downloads7) = dg7_return_awstats($pid, TRUE);
+  $leadIn = "This content, $pid, has been visited";
+
+  // Deal with version 7 statistics.
+  $v = $visits6 + $visits7;
+  $visits = format_plural($v, "<b>once</b>", "<b>@count</b> times", array('count' => $v));
+
+  // If this object is a collection, make no mention of downloads.
+  if (!$fedora_object = islandora_object_load($pid)) { return; }
+  $isCollection = FALSE;
+  $cModels = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($cModels as $cModel) {
+    if ($cModel['object']['value'] == 'islandora:collectionCModel') { $isCollection = TRUE; }
+  }
+
+  if (!$isCollection) {
+    $d = $downloads6 + $downloads7;
+    if ($d == 0) {
+      $visits .= " but never downloaded";
+    }
+    else {
+      $visits .= " and downloaded ";
+      $visits .= format_plural($d, "<b>once</b>", "<b>@count</b> times", array('count' => $d));
+    }
+  }
+  $visits .= ".";
+
+  return "$leadIn $visits";
+
+}
+
+/**
+ * Returns a count of page visits to the page(s) associated with the specified object $pid.
+ *
+ * This function returns a count of page visits to the /drupal/islandora/object (was
+ * /drupal/fedora/repository in DG6) page associated with the specified $pid object as well
+ * as the estimated number of "downloads" associated with the object.
+ * The function collects this information using a series of simple grep calls against the
+ * AWStats aggregated data files found in /var/lib/awstats.
+ *
+ * @param string $pid - The target object PID.
+ * @return array - Four integers, in order: 1) number of legacy DG6 visits, 2) number of DG7 visits,
+ *                   3) number of DG6 downloads, and 4) number of DG7 downloads.
+ */
+function dg7_return_awstats($pid) {
+  module_load_include('inc', 'icu', 'object_record');
+  if (is_null($pid) || stripos($pid, ':') < 2) { return array(0, 0, 0, 0); }
+
+  // OK, collect the data.
+  list($pidp, $pidn) = explode(':', $pid);
+
+  $divider = "\(:\|%3A\)";   // PID divider can be : or %3A.  This expression matches either.
+
+  $visits6 = $visits7 = $downloads6 = $downloads7 = $pdfDownloads6 = $normalDownloads6 = array( );
+  $f6 = "/var/lib/awstats/digital6/awstats*.txt";
+  $awk6 = " [0-9]\+ [0-9]\+ [0-9]\+ [0-9]\+$' $f6 | awk '{ sum += $2 } END { print sum }'";
+  $f7 = "/var/lib/awstats/awstats*.txt";
+  $awk7 = " [0-9]\+ [0-9]\+ [0-9]\+ [0-9]\+$' $f7 | awk '{ sum += $2 } END { print sum }'";
+
+  // Visits (in Islandora v6)
+  if (count(glob($f6))) {
+    $command = "grep '^/drupal/fedora/repository/" . $pidp . $divider . $pidn . $awk6;
+    exec($command, $visits6);
+  } else {
+    $visits6[0] = 0;
+  }
+
+      // Visits (in Islandora v7)
+      // The following line was only valid for OLD records before March 2015!
+      //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn.$awk7;
+      if (count(glob($f7))) {
+        $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . $awk7;
+        exec($command, $visits7);
+      } else {
+        $visits7[0] = 0;
+      }
+
+      // Book AND generic downloads from v6
+      if (count(glob($f6))) {
+        $command = "grep '^/drupal/fedora/repository/" . $pidp . $divider . $pidn . "/PDF.\+" . $awk6;
+        exec($command, $pdfDownloads6);
+
+        $command = "grep '^/drupal/viewer/" . $pidp . $divider . $pidn . "/.\+/download" . $awk6;
+        exec($command, $normalDownloads6);
+
+        $downloads6[0] = $pdfDownloads6[0] + $normalDownloads6[0];
+      } else {
+        $downloads6[0] = 0;
+      }
+
+      // Downloads from v7
+      // The following line was only valid for OLD records before March 2015!
+      //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn."\/download".$awk7;
+      if (count(glob($f7))) {
+        $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . "\/download" . $awk7;
+        exec($command, $downloads7);
+      } else {
+        $downloads7[0] = 0;
+      }
+
+  return array($visits6[0], $visits7[0] + 1, $downloads6[0], $downloads7[0]);
+}
+
+
+/**
+ * Determines if an object has any PDF datastreams available for display.
+ *
+ * Returns a URL to the PDF_SPREAD (preferred) or PDF item if available.  Otherwise this function returns a NULL value.
+ *
+ * @param FedoraObject $object
+ * @return null|string
+ *
+function dg7_object_has_PDF($object) {
+  // Get the PDF or PDF_SPREAD datastream.
+  if (isset($object['PDF_SPREAD'])) {
+    $id = 'PDF_SPREAD';
+  } else if (isset($object['PDF'])) {
+    $id = 'PDF';
+  } else {
+    return NULL;
+  }
+
+  // Extract the datastream label and build a URL if the MIME type is "application/pdf".
+  $pdf = $object[$id];
+  if ($pdf->mimetype != "application/pdf") { return NULL; }
+  $label = $pdf->label;
+  return "/".$id."/".rawurlencode($label);
+}
+
+*/
+
+/**
+ * Implements hook_menu_alter.
+ *
+ * @param $items
+ * @return mixed
+ */
+function dg7_menu_alter(&$items) {
+  $items['islandora/object/%/download'] = array(
+    'title' => 'Download',   // MAM...shortened button label on 20-Oct-2015
+    'description' => "Download a copy of the object's content.",
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'dg7_download',
+    'page arguments' => NULL,
+    'access callback' => 'dg7_download_access',
+    'access arguments' => NULL,
+  );
+  return $items;
+}
+
+/**
+ * Presents a download of the target object to the user.
+ *
+ * Note that all known download problems should be caught in dg7_download_access so
+ * none are reported here; the function simply returns without warning if an object
+ * cannot be downloaded for any reason.
+ *
+ * @return void
+ */
+function dg7_download( ) {
+
+  // Fetch the object PID from the request_path.
+  $path = request_path( );
+  list($i,$o,$pid,$d) = explode('/',$path);
+
+  // Retrieve the target Fedora object or return FALSE.
+  if (!$fedora_object = islandora_object_load($pid)) { return; }
+
+  // Check for an OBJ (or in the case of Books, a PDF) datastream and check its MIME type.
+  if (empty($fedora_object['OBJ']) && empty($fedora_object['PDF'])) { return; }
+
+  $altJPEG = $objMIME = FALSE;
+
+  // If OBJ is present...
+  if (!empty($fedora_object['OBJ'])) {
+    $objMIME = $fedora_object['OBJ']->mimetype;
+
+    // If the OBJ is an image/tiff, see if it is available for download.
+    // If not, determine if there is a JPG derivative available to download.
+    if ($objMIME == 'image/tiff') {
+      if (!islandora_datastream_access('view fedora repository objects', $fedora_object['OBJ'])) {
+        if (empty($fedora_object['JPG'])) {
+          return;
+        }
+        $altJPEG = TRUE;
+        $ds = "JPG";
+        $objMIME = 'image/jpeg';
+      }
+      else {
+        $ds = "OBJ";
+      }
+    }
+    else {
+      $ds = "OBJ";
+    }
+
+  // OBJ not present but we have a PDF...process like its a book.
+  } else if (!empty($fedora_object['PDF'])) {
+    $ds = "PDF";
+    $objMIME = 'application/pdf';
+  }
+
+  if (!$ext = system_mime_type_extension($objMIME)) { return; }
+  list($ns,$pidn) = explode(':',$pid);
+
+  $filename = $ns.'-'.$pidn.'.'.$ext;
+  $temp_path = realpath(file_directory_temp()) . '/';
+  $filepath = $temp_path.$filename;
+  $fedora_object[$ds]->getContent($filepath);
+
+  if (file_exists($filepath)) {
+    // Serve file download.
+    drupal_add_http_header('Pragma', 'public');
+    drupal_add_http_header('Expires', '0');
+    drupal_add_http_header('Cache-Control', 'must-revalidate, post-check=0, pre-check=0');
+    drupal_add_http_header('Content-Type', $objMIME);
+    drupal_add_http_header('Content-Disposition', 'attachment; filename=' . basename($temp_path . $filename) . ';');
+    drupal_add_http_header('Content-Transfer-Encoding', 'binary');
+    drupal_add_http_header('Content-Length', filesize($filepath));
+    readfile($filepath);
+    unlink($filepath);
+    if ($altJPEG) {
+      drupal_set_message("Access to the '$pid' TIFF image is restricted but a JPG derivative has been provided.", 'warning');
+    }
+    drupal_exit();
+  }
+  return;
+}
+
+/**
+ * The dg7_download access callback function.
+ *
+ * @return bool
+ */
+function dg7_download_access( ) {
+  $parts = $finalParts = array( );
+
+  // Check user permissions first.
+  if (!$access = user_access('view fedora repository objects')) {
+    drupal_set_message("Sorry, this content is not available for download.", 'warning');
+    return FALSE;
+  } else {
+
+    // Fetch the object PID, if any, from the request_path.
+    // On the page setup the path must end with ../islandora/object/<PID> or no match!
+    // Upon button click the path must end with ../islandora/object/<PID>/download or no match!
+
+    $path = request_path( );
+    $pattern = '/.*islandora\/object\/(.+)$/';
+    if (!preg_match($pattern, $path, $parts)) {
+      return FALSE;
+    } else {
+      $finalParts = explode('/', $parts[1]);
+      $pid = $finalParts[0];
+      if (count($finalParts) > 1) {
+        if ($finalParts[1] != 'download') { return FALSE; }
+      }
+    }
+
+    // Retrieve the target Fedora object or return FALSE.
+    if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+    $isCompound = $isBook = FALSE;
+
+    // Check for an OBJ datastream and check its MIME type.
+    if (empty($fedora_object['OBJ'])) {
+      // If this is a compound object issue a message, otherwise we'll be quiet about it.
+      $cModels = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+      foreach ($cModels as $cModel) {
+        if ($cModel['object']['value'] == 'islandora:compoundCModel') { $isCompound = TRUE; }
+        if ($cModel['object']['value'] == 'islandora:bookCModel') { $isBook = TRUE; }
+      }
+
+      // MAM...line below removed by popular consent on 20-October-2015
+      // if ($isCompound) { drupal_set_message("To download an individual file, please click on an individual content object to the right of the screen. Downloading availability may vary per object.", 'warning'); }
+
+      if (!$isBook) { return FALSE; }
+    }
+
+    // If this is a book, verify that it has a PDF datastream before proceeding.
+    if ($isBook) {
+      if (!empty($fedora_object['PDF'])) {
+        $objMIME = 'application/pdf';
+      } else {
+        $msg = "Sorry, book object '$pid' has no downloadable PDF content.";
+        drupal_set_message($msg, 'warning');
+        watchdog("dg7", $msg);
+        return FALSE;
+      }
+    } else {
+      $objMIME = $fedora_object['OBJ']->mimetype;
+    }
+
+    // If the OBJ is an image/tiff, see if it is available for download.
+    // If not, determine if there is a JPG derivative available to download.
+    if ($objMIME == 'image/tiff') {
+      if (empty($fedora_object['JPG'])) {
+        drupal_set_message("Sorry, this TIFF image cannot be downloaded.  It also has no available JPG derivative.", 'warning');
+        return FALSE;
+      }
+    }
+
+    // Check to see if the objMIME type has an identifiable canonical filename extension.
+    if (!$ext = system_mime_type_extension($objMIME)) {
+      $msg = "Sorry, the '$objMIME' content of '$pid' cannot be downloaded.";
+      drupal_set_message($msg, 'warning');
+      watchdog("dg7", "$msg  The specified MIME type could not be found in the '/etc/mime.types' file.");
+      return FALSE;
+    }
+
+  }
+  return TRUE;
+}
+
+/**
+ * Returns the system MIME type mapping of extensions to MIME types, as defined in /etc/mime.types.
+ *
+ * This and the associated functions below were all pulled from
+ * http://stackoverflow.com/questions/1147931/how-do-i-determine-the-extensions-associated-with-a-mime-type-in-php
+ *
+ * @return array
+ */
+function system_extension_mime_types( ) {
+  $out = array();
+  $file = fopen('/etc/mime.types', 'r');
+  while(($line = fgets($file)) !== false) {
+    $line = trim(preg_replace('/#.*/', '', $line));
+    if(!$line)
+      continue;
+    $parts = preg_split('/\s+/', $line);
+    if(count($parts) == 1)
+      continue;
+    $type = array_shift($parts);
+    foreach($parts as $part)
+      $out[$part] = $type;
+  }
+  fclose($file);
+  return $out;
+}
+
+/**
+ * Returns the system MIME type (as defined in /etc/mime.types) for the filename specified.
+ *
+ * @param string $file - The filename to examine.
+ * @return null
+ */
+function system_extension_mime_type($file) {
+  static $types;
+  if(!isset($types))
+    $types = system_extension_mime_types();
+  $ext = pathinfo($file, PATHINFO_EXTENSION);
+  if(!$ext)
+    $ext = $file;
+  $ext = strtolower($ext);
+  return isset($types[$ext]) ? $types[$ext] : null;
+}
+
+/**
+ * # Returns the system MIME type mapping of MIME types to extensions, as defined in /etc/mime.types.
+ *
+ * Considers the first extension listed to be canonical.
+ *
+ * @return array
+ */
+function system_mime_type_extensions( ) {
+  $out = array();
+  $file = fopen('/etc/mime.types', 'r');
+  while(($line = fgets($file)) !== false) {
+    $line = trim(preg_replace('/#.*/', '', $line));
+    if(!$line)
+      continue;
+    $parts = preg_split('/\s+/', $line);
+    if(count($parts) == 1)
+      continue;
+    $type = array_shift($parts);
+    if(!isset($out[$type]))
+      $out[$type] = array_shift($parts);
+  }
+  fclose($file);
+  return $out;
+}
+
+/**
+ * Returns the canonical file extension for the MIME type specified, as defined in /etc/mime.types.
+ *
+ * Considers the first extension listed to be canonical.
+ *
+ * @param string $type - The MIME type.
+ * @return string|boolean
+ */
+function system_mime_type_extension($type) {
+  static $exts;
+  if(!isset($exts))
+    $exts = system_mime_type_extensions();
+  return isset($exts[$type]) ? $exts[$type] : FALSE;
+}
+
+/**
+ * This function overrides usual LDAP http message text.
+ *
+ * It is called from theme_ldap_servers_https_required which lives
+ * in ldap_servers.theme.inc.
+ *
+ * @param $vars
+ * @return null|string
+ */
+function dg7_theme_ldap_servers_https_required($vars) {
+
+  $vars['site_contact_link'] = 'digital@grinnell.edu';
+  return t("You are accessing site_name using an unencrypted connection. For your security,
+     site_name only supports account logins using the secure HTTPS protocol. You can switch
+     to HTTPS by changing the URL in your browser's address bar to begin with \"https\"
+     instead of \"http\". Please contact site_contact_link for help if this warning persists.", $vars);
+
+}
+
+/**
+ * Alter the user login form for http: visitors to Digital Grinnell.
+ *
+ * This function works in conjunction with, and is called from ldap_servers.module
+ * and the ldap_servers_disable_http_check function there.
+ *
+ * @param $form
+ *   The login form array.
+ * @param $tokens
+ *   Array of tokens provided for the informational message.
+ *
+ */
+function dg7_alter_user_login_form($form, $tokens) {
+  $msg = t(theme('ldap_servers_https_required', $tokens));
+  $form['name']['#type'] = 'markup';
+  $form['name']['#markup'] = $msg;
+  unset($form['pass']);
+}
+
+/**
+ * Implements hook_preprocess_theme().
+ *
+ * If our target object has a CompoundTN datastream, use it in place of the TN.
+ * MAM added... 07-Dec-2015.  Removed on 18-Dec-2015...this was ineffective.
+ *
+ *
+function dg7_preprocess_islandora_default(&$variables) {
+  $islandora_object = $variables['islandora_object'];
+  if (isset($islandora_object['CompoundTN']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['CompoundTN'])) {
+    $variables['islandora_thumbnail_url'] = url("islandora/object/{$islandora_object->id}/datastream/CompoundTN/view");
+  }
+} */
+
+

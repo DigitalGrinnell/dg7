@@ -1,0 +1,11 @@
+;$ID$
+name = Digital Grinnell v7 Code
+description = "Custom functions created specifically for Digital.Grinnell.edu."
+package = Digital Grinnell
+core = 7.x
+files[] = dg7.module
+files[] = dgCoverSheet.xsl
+files[] = dgCoverSheetLogo.png
+scripts[] = js/open_printable_coversheet.js
+scripts[] = js/open_transcription_window.js
+stylesheets[all][] = css/styles.css
