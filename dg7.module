@@ -1520,10 +1520,11 @@ function dg7_fetch_OBJ($path, $credentials) {
  * Implements hook_fetch_CSV_defaults( )
  */
 function dg7_fetch_CSV_defaults( ) {
-  $values = array(
+  $path = drupal_get_path('module', 'icg_csv_import');
+  $array = array(
     'label_field' => '/mods/titleInfo/title',
-    'transform' => '/tmp/mods-to-dc.xslt',
-    'constants_file' => '/tmp/constants.csv',
+    'transform'   => $path . '/tests/data/mods_to_dc.xsl',
+    'constants_file' => $path . '/tests/data/constants.csv',
   );
-  return $values;
+  return $array;
 }
