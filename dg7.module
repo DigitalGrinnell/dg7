@@ -146,20 +146,20 @@ function dg7_preprocess(&$variables, $hook) {
  *
 function dg7_islandora_solr_query_result(array $result) {
 
-  // Look in reverse for any response docs where...
-  // $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] = info:fedora/islandora:collectionCModel
+// Look in reverse for any response docs where...
+// $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] = info:fedora/islandora:collectionCModel
 
-  // If one is found, pop it to the top of the list and continue.
+// If one is found, pop it to the top of the list and continue.
 
-  $i = count($result['response']['docs']);
-  while ($i) {
-    if ($collection = (isset($result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s']) ?
-      $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] : FALSE) === 'info:fedora/islandora:collectionCModel') {
-        _move_to_top($result['response']['docs'], $i);
-    }
-    $i--;
-  }
-  return;
+$i = count($result['response']['docs']);
+while ($i) {
+if ($collection = (isset($result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s']) ?
+$result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] : FALSE) === 'info:fedora/islandora:collectionCModel') {
+_move_to_top($result['response']['docs'], $i);
+}
+$i--;
+}
+return;
 }
 
 /**
@@ -169,18 +169,18 @@ function dg7_islandora_solr_query_result(array $result) {
  * @param $key
  *
 function _move_to_top(&$array, $key) {
-  $temp = array($key => $array[$key]);
-  unset($array[$key]);
-  $array = $temp + $array;
+$temp = array($key => $array[$key]);
+unset($array[$key]);
+$array = $temp + $array;
 }
 
 function _move_to_bottom(&$array, $key) {
-  $value = $array[$key];
-  unset($array[$key]);
-  $array[$key] = $value;
+$value = $array[$key];
+unset($array[$key]);
+$array[$key] = $value;
 }
 
-*/
+ */
 
 
 /**
@@ -578,9 +578,9 @@ function dg7_preprocess_islandora_solr_teaser(&$variables) {
  *
  *
 function dg7_sparql_query($query) {
-  $tuque = islandora_get_tuque_connection( );
-  $results = $tuque->repository->ri->sparqlQuery($query);
-  return $results;
+$tuque = islandora_get_tuque_connection( );
+$results = $tuque->repository->ri->sparqlQuery($query);
+return $results;
 }
 
 
@@ -589,44 +589,44 @@ function dg7_sparql_query($query) {
  *
  *
 function dg7_collection_list( ) {
-  $solr = new IslandoraSolrQueryProcessor( );
+$solr = new IslandoraSolrQueryProcessor( );
 
-  // Build and execute Apache Solr query.
-  $query = "RELS_EXT_isMemberOfCollection_uri_s:info\:fedora/islandora\:root";
-  $params['sort'] = 'fgs_label_s asc';
-  $params['fl'] = 'PID, fgs_label_s';
+// Build and execute Apache Solr query.
+$query = "RELS_EXT_isMemberOfCollection_uri_s:info\:fedora/islandora\:root";
+$params['sort'] = 'fgs_label_s asc';
+$params['fl'] = 'PID, fgs_label_s';
 
-  $solr->buildAndExecuteQuery($query, $params);
+$solr->buildAndExecuteQuery($query, $params);
 
-  if (empty($solr->islandoraSolrResult)) {
-    return "Error searching Solr index in ".__FUNCTION__.".";
-  } else {
-    $objects = $solr->islandoraSolrResult['response']['objects'];
-    foreach ($objects as $array) {
-      $collections[$array['PID']] = $array['object_label'];
-    }
-  }
-  return $collections;
+if (empty($solr->islandoraSolrResult)) {
+return "Error searching Solr index in ".__FUNCTION__.".";
+} else {
+$objects = $solr->islandoraSolrResult['response']['objects'];
+foreach ($objects as $array) {
+$collections[$array['PID']] = $array['object_label'];
+}
+}
+return $collections;
 }
 
 
 /*
-  global $user;
+global $user;
 
-  // Fetch some pertinent user data.
+// Fetch some pertinent user data.
 
-  if ($user->uid != 0) {
-    $userClause = "(bound(?user) && ?user='{$user->name}') || ";
-  } else {
-    $userClause = " ";
-  }
-  $rc = "(bound(?role) && (?role = ";
-  foreach ($user->roles as $ur) {
-    $rc .= "'$ur' || ";
-  }
-  $rolesClause = trim($rc," |")."))";
+if ($user->uid != 0) {
+$userClause = "(bound(?user) && ?user='{$user->name}') || ";
+} else {
+$userClause = " ";
+}
+$rc = "(bound(?role) && (?role = ";
+foreach ($user->roles as $ur) {
+$rc .= "'$ur' || ";
+}
+$rolesClause = trim($rc," |")."))";
 
-  $collection_query = <<<EOQ
+$collection_query = <<<EOQ
 SELECT DISTINCT ?object ?title
 FROM <#ri>
 WHERE {
@@ -641,16 +641,16 @@ FILTER((!bound(?role) && !bound(?user)) || {$userClause} (bound(?role) && ({$rol
 } ORDER BY ?title
 EOQ;
 
-  $results = dg7_sparql_query($collection_query);
-  foreach ($results as $result) {
-    $id = $result['object']['value'];
-    list($ns,$collection) = explode(':',$id);
-    $search_collection = '*'.$collection;
-    // $collections[$search_collection] = $result['title']['value'];
-    $collections[$search_collection] = $collection;
-  }
+$results = dg7_sparql_query($collection_query);
+foreach ($results as $result) {
+$id = $result['object']['value'];
+list($ns,$collection) = explode(':',$id);
+$search_collection = '*'.$collection;
+// $collections[$search_collection] = $result['title']['value'];
+$collections[$search_collection] = $collection;
+}
 
-  return $collections;
+return $collections;
 }
 
 /*  The following query was captured from the islandora_solr module as a SPARQL example which is permissions (XACML) aware.
@@ -658,68 +658,68 @@ EOQ;
 SELECT DISTINCT ?object ?title ?owner ?date_modified
 FROM <#ri>
 WHERE {
-  ?object ?collection_predicate <info:fedora/islandora:root> ;
-        <fedora-model:label> ?title ;
-        <fedora-model:ownerId> ?owner ;
-        <fedora-view:lastModifiedDate> ?date_modified ;
-        <fedora-model:hasModel> ?model . ?object <fedora-model:state> <fedora-model:Active> .
-  OPTIONAL {{?object <info:fedora/fedora-system:def/relations-external#isConstituentOf> ?compound} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByRole> ?role} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByUser> ?user}}
-  FILTER(regex(str(?object), "info:fedora/grinnell:")) FILTER(sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOf>)) FILTER(!bound(?compound)) FILTER((!bound(?role) && !bound(?user)) || (bound(?user) && ?user='anonymous') || (bound(?role) && (?role='anonymous user')))
+?object ?collection_predicate <info:fedora/islandora:root> ;
+<fedora-model:label> ?title ;
+<fedora-model:ownerId> ?owner ;
+<fedora-view:lastModifiedDate> ?date_modified ;
+<fedora-model:hasModel> ?model . ?object <fedora-model:state> <fedora-model:Active> .
+OPTIONAL {{?object <info:fedora/fedora-system:def/relations-external#isConstituentOf> ?compound} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByRole> ?role} UNION {?object <http://islandora.ca/ontology/relsext#isViewableByUser> ?user}}
+FILTER(regex(str(?object), "info:fedora/grinnell:")) FILTER(sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOf>)) FILTER(!bound(?compound)) FILTER((!bound(?role) && !bound(?user)) || (bound(?user) && ?user='anonymous') || (bound(?role) && (?role='anonymous user')))
 }ORDER BY ?title
  */
 
 /**
-* Implementation of hook_help().
-*
+ * Implementation of hook_help().
+ *
 function dg7_help($path, $arg) {
-  switch ($path) {
-    case 'admin/modules#description':
-      return t('This module provides functions specifically written for Digital7.Grinnell.edu.' );
-    case 'admin/help#dg7':
-      $txt  = '<h3>Description:</h3><p>This module provides functions specifically written for Digital7.Grinnell.edu.</p>';
-      return t( $txt );
-  }
+switch ($path) {
+case 'admin/modules#description':
+return t('This module provides functions specifically written for Digital7.Grinnell.edu.' );
+case 'admin/help#dg7':
+$txt  = '<h3>Description:</h3><p>This module provides functions specifically written for Digital7.Grinnell.edu.</p>';
+return t( $txt );
+}
 }
 
 /**
-* Implementation of hook_perm().
-*
+ * Implementation of hook_perm().
+ *
 function dg7_perm( ) {
-  return array(
-    'administer dg7',
-    'create dg7',
-    'delete dg7',
-    'delete dg7',
-    'edit dg7',
-    'edit own dg7'
-   );
+return array(
+'administer dg7',
+'create dg7',
+'delete dg7',
+'delete dg7',
+'edit dg7',
+'edit own dg7'
+);
 }
 
 /**
-* Implementation of hook_access().
-*
+ * Implementation of hook_access().
+ *
 function dg7_access($op, $node, $account) {
-  switch ($op) {
-    case 'create':
-      return user_access('create dg7', $account);
-      break;
-    case 'update':
-      return user_access('edit dg7', $account) || (user_access('edit own dg7', $account) && ($account->uid == $node->uid));
-      break;
-    case 'delete':
-      return user_access('delete dg7', $account) || (user_access('delete own dg7', $account) && ($account->uid == $node->uid));
-      break;
-  }
+switch ($op) {
+case 'create':
+return user_access('create dg7', $account);
+break;
+case 'update':
+return user_access('edit dg7', $account) || (user_access('edit own dg7', $account) && ($account->uid == $node->uid));
+break;
+case 'delete':
+return user_access('delete dg7', $account) || (user_access('delete own dg7', $account) && ($account->uid == $node->uid));
+break;
+}
 }
 
 /**
-* Implementation of hook_init( ).
-*/
+ * Implementation of hook_init( ).
+ */
 function dg7_init( ) { return; }
 
 /**
-* Implementation of hook_cron( ).
-*/
+ * Implementation of hook_cron( ).
+ */
 function dg7_cron( ) { return; }
 
 /**
@@ -731,17 +731,17 @@ function dg7_cron( ) { return; }
  *   An associative array containing form state.
  *
 function dg7_set_default_advanced_Solr_search_options(&$form, &$form_state) {
-  foreach ($form['terms'] as $index => &$term) {
-    if (is_int($index) && $term['field']['#type'] === 'select') {
-      $term['field']['#options'] = array();
-      $term['field']['#options']['catch_all_fields_mt'] = "Keyword";
-      $term['field']['#options']['dc.title'] = "Title";
-      $term['field']['#options']['dc.contributor'] = "Creator/Contributor";
-      $term['field']['#options']['dc.date'] = "Date Created";
-      $term['field']['#options']['mods_subject_topic_ms'] = "Subject";
-    }
-  }
-  return;
+foreach ($form['terms'] as $index => &$term) {
+if (is_int($index) && $term['field']['#type'] === 'select') {
+$term['field']['#options'] = array();
+$term['field']['#options']['catch_all_fields_mt'] = "Keyword";
+$term['field']['#options']['dc.title'] = "Title";
+$term['field']['#options']['dc.contributor'] = "Creator/Contributor";
+$term['field']['#options']['dc.date'] = "Date Created";
+$term['field']['#options']['mods_subject_topic_ms'] = "Subject";
+}
+}
+return;
 }
 
 
@@ -762,12 +762,12 @@ function dg7_set_default_advanced_Solr_search_options(&$form, &$form_state) {
  *
  *
 function dg7_islandora_basic_collection_get_query_statements($type = 'view') {
-  $to_return = array( );
-  $to_return[ ] = <<<EOQ
+$to_return = array( );
+$to_return[ ] = <<<EOQ
 ?object <dc:date> ?date ;
-        <dc:source> ?source
+<dc:source> ?source
 EOQ;
-  return $to_return;
+return $to_return;
 }
 
 /**
@@ -779,35 +779,35 @@ EOQ;
  *
 function dg7_islandora_basic_collection_query_param_alter(array &$filters, array &$statements, array &$params, array &$optionals) {
 
-  if (list($collection,$search) = dg7_fetch_collection_selection( )) {
+if (list($collection,$search) = dg7_fetch_collection_selection( )) {
 
-     $params['vars'] .= ' ?source ?date';
+$params['vars'] .= ' ?source ?date';
 
-    // Set the Solr query based on the collection.
+// Set the Solr query based on the collection.
 
-    islandora_solr(ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE.':'.$search.' AND *:*');  // Query RELS_EXT by $collection
+islandora_solr(ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE.':'.$search.' AND *:*');  // Query RELS_EXT by $collection
 
-    switch ($collection) {   // switch on $collection
+switch ($collection) {   // switch on $collection
 
-      case 'phpp':             // The Poweshiek History Preservation Project
-      case 'college-history':  // The Early College History collection
-      case 'jimmy-ley':        // The Jimmy Ley Collection
-        $params['order_by'] = '?date ?title';                                      // Sort by date then title
-        break;
+case 'phpp':             // The Poweshiek History Preservation Project
+case 'college-history':  // The Early College History collection
+case 'jimmy-ley':        // The Jimmy Ley Collection
+$params['order_by'] = '?date ?title';                                      // Sort by date then title
+break;
 
-      case 'faculty-scholarship':   // The Faculty Scholarship collection
-      case 'student-scholarship':   // The Student Scholarship collection
-      case 'curricular-materials':  // The Syllabi and Curricular Materials collection
-      case 'faulconer':             // The Faulconer Art collection
-        $params['order_by'] = '?source ?title';                                  // Sort by source (creators) then title
-        break;
+case 'faculty-scholarship':   // The Faculty Scholarship collection
+case 'student-scholarship':   // The Student Scholarship collection
+case 'curricular-materials':  // The Syllabi and Curricular Materials collection
+case 'faulconer':             // The Faulconer Art collection
+$params['order_by'] = '?source ?title';                                  // Sort by source (creators) then title
+break;
 
-      default:   // Not entering a specialized collection.  Check the breadcrumb to see if we are within one?
-        $trail = menu_get_active_breadcrumb();
+default:   // Not entering a specialized collection.  Check the breadcrumb to see if we are within one?
+$trail = menu_get_active_breadcrumb();
 
-    }
-  }
-  return;
+}
+}
+return;
 }
 
 /**
@@ -889,15 +889,15 @@ return; */
 }
 
 /**
-* Generate an "Open a Cover Sheet" button for a specified object.
-*
-* This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
-* ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
-*
-* @param $pid
-* @param $tabToCopy
-* @return bool|array
-*/
+ * Generate an "Open a Cover Sheet" button for a specified object.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ * @param $tabToCopy
+ * @return bool|array
+ */
 function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
   module_load_include('inc', 'csl', 'CSL');
 
@@ -1080,38 +1080,38 @@ function dg7_return_awstats($pid) {
     $visits6[0] = 0;
   }
 
-      // Visits (in Islandora v7)
-      // The following line was only valid for OLD records before March 2015!
-      //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn.$awk7;
-      if (count(glob($f7))) {
-        $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . $awk7;
-        exec($command, $visits7);
-      } else {
-        $visits7[0] = 0;
-      }
+  // Visits (in Islandora v7)
+  // The following line was only valid for OLD records before March 2015!
+  //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn.$awk7;
+  if (count(glob($f7))) {
+    $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . $awk7;
+    exec($command, $visits7);
+  } else {
+    $visits7[0] = 0;
+  }
 
-      // Book AND generic downloads from v6
-      if (count(glob($f6))) {
-        $command = "grep '^/drupal/fedora/repository/" . $pidp . $divider . $pidn . "/PDF.\+" . $awk6;
-        exec($command, $pdfDownloads6);
+  // Book AND generic downloads from v6
+  if (count(glob($f6))) {
+    $command = "grep '^/drupal/fedora/repository/" . $pidp . $divider . $pidn . "/PDF.\+" . $awk6;
+    exec($command, $pdfDownloads6);
 
-        $command = "grep '^/drupal/viewer/" . $pidp . $divider . $pidn . "/.\+/download" . $awk6;
-        exec($command, $normalDownloads6);
+    $command = "grep '^/drupal/viewer/" . $pidp . $divider . $pidn . "/.\+/download" . $awk6;
+    exec($command, $normalDownloads6);
 
-        $downloads6[0] = $pdfDownloads6[0] + $normalDownloads6[0];
-      } else {
-        $downloads6[0] = 0;
-      }
+    $downloads6[0] = $pdfDownloads6[0] + $normalDownloads6[0];
+  } else {
+    $downloads6[0] = 0;
+  }
 
-      // Downloads from v7
-      // The following line was only valid for OLD records before March 2015!
-      //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn."\/download".$awk7;
-      if (count(glob($f7))) {
-        $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . "\/download" . $awk7;
-        exec($command, $downloads7);
-      } else {
-        $downloads7[0] = 0;
-      }
+  // Downloads from v7
+  // The following line was only valid for OLD records before March 2015!
+  //  $command = "grep '^/drupal7/islandora/object/".$pidp.$divider.$pidn."\/download".$awk7;
+  if (count(glob($f7))) {
+    $command = "grep '^/islandora/object/" . $pidp . $divider . $pidn . "\/download" . $awk7;
+    exec($command, $downloads7);
+  } else {
+    $downloads7[0] = 0;
+  }
 
   return array($visits6[0], $visits7[0] + 1, $downloads6[0], $downloads7[0]);
 }
@@ -1126,23 +1126,23 @@ function dg7_return_awstats($pid) {
  * @return null|string
  *
 function dg7_object_has_PDF($object) {
-  // Get the PDF or PDF_SPREAD datastream.
-  if (isset($object['PDF_SPREAD'])) {
-    $id = 'PDF_SPREAD';
-  } else if (isset($object['PDF'])) {
-    $id = 'PDF';
-  } else {
-    return NULL;
-  }
-
-  // Extract the datastream label and build a URL if the MIME type is "application/pdf".
-  $pdf = $object[$id];
-  if ($pdf->mimetype != "application/pdf") { return NULL; }
-  $label = $pdf->label;
-  return "/".$id."/".rawurlencode($label);
+// Get the PDF or PDF_SPREAD datastream.
+if (isset($object['PDF_SPREAD'])) {
+$id = 'PDF_SPREAD';
+} else if (isset($object['PDF'])) {
+$id = 'PDF';
+} else {
+return NULL;
 }
 
-*/
+// Extract the datastream label and build a URL if the MIME type is "application/pdf".
+$pdf = $object[$id];
+if ($pdf->mimetype != "application/pdf") { return NULL; }
+$label = $pdf->label;
+return "/".$id."/".rawurlencode($label);
+}
+
+ */
 
 /**
  * Implements hook_menu_alter.
@@ -1209,7 +1209,7 @@ function dg7_download( ) {
       $ds = "OBJ";
     }
 
-  // OBJ not present but we have a PDF...process like its a book.
+    // OBJ not present but we have a PDF...process like its a book.
   } else if (!empty($fedora_object['PDF'])) {
     $ds = "PDF";
     $objMIME = 'application/pdf';
@@ -1456,62 +1456,64 @@ function dg7_alter_user_login_form($form, $tokens) {
  *
  *
 function dg7_preprocess_islandora_default(&$variables) {
-  $islandora_object = $variables['islandora_object'];
-  if (isset($islandora_object['CompoundTN']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['CompoundTN'])) {
-    $variables['islandora_thumbnail_url'] = url("islandora/object/{$islandora_object->id}/datastream/CompoundTN/view");
-  }
+$islandora_object = $variables['islandora_object'];
+if (isset($islandora_object['CompoundTN']) && islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $islandora_object['CompoundTN'])) {
+$variables['islandora_thumbnail_url'] = url("islandora/object/{$islandora_object->id}/datastream/CompoundTN/view");
+}
 } */
 
 /**
  * Implements hook_fetch_OBJ( ).
+ *
+ * Note that this implementation REQUIRED the installation of the following server packages...
+ *   apt-get install libssh2-1-dev libssh2-php
  */
 function dg7_fetch_OBJ($path, $credentials) {
 
-  $ftp_username = $credentials['username'];
-  $ftp_userpass = $credentials['password'];
-
   $module_name = basename(__FILE__, '.module');
 
+  if (empty($path)) {
+    watchdog($module_name, "No content path was supplied so no file transfer connection was attempted.");
+    return FALSE;
+  }
+
   // Explode the $path... should be of the form server:/dir1/dir2/dir3/filename.ext
-  list($server, $rest) = explode(':', $path, 2);
-  $parts = pathinfo($rest);
-  $ftp_directory = $parts['dirname'];
+  list($server, $filepath) = explode(':', $path, 2);
+  $parts = pathinfo($filepath);
+  $directory = $parts['dirname'];
   $filename = $parts['basename'];
 
-  // Set up a basic connection.
-  $conn_id = ftp_ssl_connect($server, 21, 180);
-  if (!$conn_id) {
-    watchdog($module_name, "FTP connection to server '%server' failed!", array('server' => $server), WATCHDOG_ERROR);
-    return FALSE;
-  }
+  // If no transfer credentials...we're done.
+  if (empty($credentials['username']) || empty($credentials['password'])) { return FALSE; }
 
-  // Login with the specified FTP username and password.
-  $login_result = ftp_login($conn_id, $ftp_username, $ftp_userpass);
-  if (!$login_result) {
-    watchdog($module_name, "FTP login failed!", array( ), WATCHDOG_ERROR);
-    return FALSE;
-  }
+  $username = $credentials['username'];
+  $userpass = $credentials['password'];
 
-  // Set FTP to passive mode.
-  ftp_pasv($conn_id, TRUE);
+  // Open an SSH connection to support SFTP.
+  $conn_id = ssh2_connect($server, 22);
+  ssh2_auth_password($conn_id, $username, $userpass);
+  $sftp = ssh2_sftp($conn_id);
 
-  // Attempt to change the remote directory as specified.
-  $change_dir = ftp_chdir($conn_id, $ftp_directory);
-  if (!$change_dir) {
-    watchdog($module_name, "FTP chdir to '%directory' failed!", array('%directory' => $ftp_directory), WATCHDOG_ERROR);
-    die("ftp_chdir failed!");
-    return FALSE;
-  } else {
-    $txt = "Current directory is: " . ftp_pwd($conn_id);
-    watchdog($module_name, $txt, array( ), WATCHDOG_INFO);
-  }
-
-  // Fetch a file via FTP.
+  // Fetch the file via SFTP.
   $temp_file = drupal_tempnam('temporary://', 'import_content_');   // open a temp file
-  if (!ftp_get($conn_id, $temp_file, $filename, FTP_BINARY)) {
-    watchdog($module_name, "Could not download file '%filename' via FTP.", array('%filename' => $filename), WATCHDOG_ERROR);
+  $target = $sftp.$filepath;
+  if (!$read = fopen("ssh2.sftp://$target", 'b')) {
+    watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
     return FALSE;
   }
+  if (!$write = fopen($temp_file, 'w')) {
+    watchdog($module_name, "Could not open temporary file '%filename' for writing.", array('%filename' => $temp_file), WATCHDOG_ERROR);
+    return FALSE;
+  }
+
+  // Read and write the file.
+  while (!feof($read)) {
+    fwrite($write, fread($read, 8192));
+  }
+
+  // All done.  Close up shop.
+  fclose($read);
+  fclose($write);
 
   return $temp_file;
 }
