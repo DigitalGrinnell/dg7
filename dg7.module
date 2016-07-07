@@ -899,6 +899,9 @@ return; */
  * @return bool|array
  */
 function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+  static $ns = 'mods';
+  static $nsU = 'http://www.loc.gov/mods/v3';
+
   module_load_include('inc', 'csl', 'CSL');
 
   // Retrieve the target Fedora object or return FALSE if there is none.
@@ -930,6 +933,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     $xml = new DOMDocument;
     $xml->loadXML($mods);
     $dx = new DOMXPath($xml);
+    $dx->registerNamespace($ns, $nsU);
     $relatedItems = $dx->query("/mods:mods/mods:relatedItem[@type='admin']");
     foreach ($relatedItems as $rI) {
       $rI->parentNode->removeChild($rI);
@@ -937,6 +941,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     }
 
     $xml->loadXML($content);
+    $dx->registerNamespace($ns, $nsU);
     $dx = new DOMXPath($xml);
     $roots = $dx->query("/mods:mods");
     foreach ($roots as $root) {
