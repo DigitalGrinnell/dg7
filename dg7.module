@@ -1529,3 +1529,10 @@ function dg7_fetch_CSV_defaults( ) {
   );
   return $array;
 }
+
+/**
+ * Implements hook_create_object_post_ops( )
+ */
+function dg7_create_object_post_ops($pid) {
+  return;
+}
