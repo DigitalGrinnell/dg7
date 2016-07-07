@@ -941,8 +941,8 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     }
 
     $xml->loadXML($content);
-    $dx->registerNamespace($ns, $nsU);
     $dx = new DOMXPath($xml);
+    $dx->registerNamespace($ns, $nsU);
     $roots = $dx->query("/mods:mods");
     foreach ($roots as $root) {
       $content = $xml->saveXML($root);
