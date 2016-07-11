@@ -428,6 +428,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:college-history':  // The Early College History collection
     case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
     case 'grinnell:gwcc':             // The George Washington Cook Correspondence
+    case 'grinnell:postcards':        // Historic Iowa Postcards
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
@@ -519,6 +520,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
     case 'grinnell:college-history':  // The Early College History collection
     case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
     case 'grinnell:gwcc':             // The George Washington Cook Correspondence
+    case 'grinnell:postcards':        // Historic Iowa Postcards
       $view->orderby['fgs_createdDate_dt'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
       break;
