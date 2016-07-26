@@ -1498,8 +1498,13 @@ function dg7_fetch_OBJ($path, $credentials) {
 
   // Open an SSH connection to support SFTP.
   $conn_id = ssh2_connect($server, 22);
-  ssh2_auth_password($conn_id, $username, $userpass);
-  $sftp = ssh2_sftp($conn_id);
+  if ($conn_id) {
+    ssh2_auth_password($conn_id, $username, $userpass);
+    $sftp = ssh2_sftp($conn_id);
+  } else {
+    watchdog($module_name, "ssh2_connect failed so no file transfer is possible.");
+    return FALSE;
+  }
 
   // Fetch the file via SFTP.
   $temp_file = drupal_tempnam('temporary://', 'import_content_');   // open a temp file
