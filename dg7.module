@@ -408,7 +408,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
   if (isset($isq->internalSolrParams['f']) && isset($isq->solrParams['fq'])) {
     foreach ($isq->solrParams['fq'] as $fq) {
       if (strstr($fq, 'RELS_EXT_isMemberOfCollection')) {
-        list(, $tail) = explode('/', $fq);
+        list($junk, $tail) = explode('/', $fq);
         $collection = str_replace('\\', '', $tail);
         /* $msg = __FUNCTION__ . ' called with collection = ' . $collection;
         drupal_set_message($msg, 'status'); */
