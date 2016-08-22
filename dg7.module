@@ -407,7 +407,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
   $collection = FALSE;
   if (isset($isq->internalSolrParams['f']) && isset($isq->solrParams['fq'])) {
     foreach ($isq->solrParams['fq'] as $fq) {
-      if (strstr($fq, 'RELS_EXT_isMemberOfCollection')) {
+      if (strstr($fq, 'RELS_EXT_isMemberOfCollection') && (strpos($fq, '/') != FALSE)) {
         list($junk, $tail) = explode('/', $fq);
         $collection = str_replace('\\', '', $tail);
         /* $msg = __FUNCTION__ . ' called with collection = ' . $collection;
