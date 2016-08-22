@@ -405,7 +405,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
   // Determine if this is a collection query.
   $collection = FALSE;
-  if (isset($isq->internalSolrParams['f'])) {
+  if (isset($isq->internalSolrParams['f']) && isset($isq->solrParams['fq'])) {
     foreach ($isq->solrParams['fq'] as $fq) {
       if (strstr($fq, 'RELS_EXT_isMemberOfCollection')) {
         list(, $tail) = explode('/', $fq);
@@ -424,12 +424,23 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     // Sort by date then label.
 
-    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':  // The Early College History collection
-    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
-    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
-    case 'grinnell:postcards':        // Historic Iowa Postcards
+    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':      // The Early College History collection
+    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
+    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
+    case 'grinnell:postcards':            // Historic Iowa Postcards
+    case 'grinnell:geology':              // Geology (Fossils) Collection
+    case 'grinnell:physics-museum':       // Physics Museum
+    case 'grinnell:grinnell-in-china':    // Grinnell In China
+    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      break;
+
+    // Special sort by date required for Ancient Coins due to mixed BC and AD dates.
+
+    case 'grinnell:ancient-coins':        // Ancient Coins
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_i asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
@@ -516,11 +527,16 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 
     // Sort by date then label.
 
-    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':  // The Early College History collection
-    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
-    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
-    case 'grinnell:postcards':        // Historic Iowa Postcards
+    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':      // The Early College History collection
+    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
+    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
+    case 'grinnell:postcards':            // Historic Iowa Postcards
+    case 'grinnell:ancient-coins':        // Ancient Coins
+    case 'grinnell:geology':              // Geology (Fossils) Collection
+    case 'grinnell:physics-museum':       // Physics Museum
+    case 'grinnell:grinnell-in-china':    // Grinnell In China
+    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
       $view->orderby['fgs_createdDate_dt'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
       break;
