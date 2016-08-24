@@ -440,7 +440,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     // Special sort by date required for Ancient Coins due to mixed BC and AD dates.
 
     case 'grinnell:ancient-coins':        // Ancient Coins
-      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_i asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
