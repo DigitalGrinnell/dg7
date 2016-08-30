@@ -199,8 +199,18 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
   // The big switch...
   switch($form_id) {
 
-    // User login and register forms.
-    // case 'user_login':     // MAM...20-Jan-2016... Do NOT block the user/login page!
+    // User login form
+    case 'user_login_block':    // MAM...20-Jan-2016... Do NOT block the user/login page!
+      $form['name']['#weight'] = 1;
+      $form['pass']['#weight'] = 2;
+
+      $msg = t("User login is not required to access our collection; however, some content and features require a Grinnell.edu login.");
+      $form['message']['#type'] = 'markup';
+      $form['message']['#markup'] = $msg;
+      $form['message']['#weight'] = -99;       // top of the form?
+      break;
+
+    // User register form...block it!
     case 'user_register_form':
       if ($user->uid != '1') {
         $form['#access'] = FALSE;
@@ -572,6 +582,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 function dg7_preprocess_islandora_solr_teaser(&$variables) {
 
   // Add a creators_statement to be displayed.
+
   if (isset($variables['values']['dc.creator'])) {
     $val = '';
     foreach ($variables['values']['dc.creator'] as $creator) {
@@ -1525,6 +1536,7 @@ function dg7_fetch_OBJ($path, $credentials) {
   // Fetch the file via SFTP.
   $temp_file = drupal_tempnam('temporary://', 'import_content_');   // open a temp file
   $target = $sftp.$filepath;
+
   if (!$read = fopen("ssh2.sftp://$target", 'b')) {
     watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
     return FALSE;
