@@ -199,8 +199,18 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
   // The big switch...
   switch($form_id) {
 
-    // User login and register forms.
-    // case 'user_login':     // MAM...20-Jan-2016... Do NOT block the user/login page!
+    // User login form
+    case 'user_login_block':    // MAM...20-Jan-2016... Do NOT block the user/login page!
+      $form['name']['#weight'] = 1;
+      $form['pass']['#weight'] = 2;
+
+      $msg = t("User login is not required to access our collection; however, some content and features require a Grinnell.edu login.");
+      $form['message']['#type'] = 'markup';
+      $form['message']['#markup'] = $msg;
+      $form['message']['#weight'] = -99;       // top of the form?
+      break;
+
+    // User register form...block it!
     case 'user_register_form':
       if ($user->uid != '1') {
         $form['#access'] = FALSE;
@@ -405,10 +415,10 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
   // Determine if this is a collection query.
   $collection = FALSE;
-  if (isset($isq->internalSolrParams['f'])) {
+  if (isset($isq->internalSolrParams['f']) && isset($isq->solrParams['fq'])) {
     foreach ($isq->solrParams['fq'] as $fq) {
-      if (strstr($fq, 'RELS_EXT_isMemberOfCollection')) {
-        list(, $tail) = explode('/', $fq);
+      if (strstr($fq, 'RELS_EXT_isMemberOfCollection') && (strpos($fq, '/') != FALSE)) {
+        list($junk, $tail) = explode('/', $fq);
         $collection = str_replace('\\', '', $tail);
         /* $msg = __FUNCTION__ . ' called with collection = ' . $collection;
         drupal_set_message($msg, 'status'); */
@@ -424,12 +434,23 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     // Sort by date then label.
 
-    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':  // The Early College History collection
-    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
-    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
-    case 'grinnell:postcards':        // Historic Iowa Postcards
+    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':      // The Early College History collection
+    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
+    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
+    case 'grinnell:postcards':            // Historic Iowa Postcards
+    case 'grinnell:geology':              // Geology (Fossils) Collection
+    case 'grinnell:physics-museum':       // Physics Museum
+    case 'grinnell:grinnell-in-china':    // Grinnell In China
+    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      break;
+
+    // Special sort by date required for Ancient Coins due to mixed BC and AD dates.
+
+    case 'grinnell:ancient-coins':        // Ancient Coins
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
@@ -516,11 +537,16 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 
     // Sort by date then label.
 
-    case 'grinnell:phpp':             // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':  // The Early College History collection
-    case 'grinnell:jimmy-ley':        // The Jimmy Ley Collection
-    case 'grinnell:gwcc':             // The George Washington Cook Correspondence
-    case 'grinnell:postcards':        // Historic Iowa Postcards
+    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':      // The Early College History collection
+    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
+    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
+    case 'grinnell:postcards':            // Historic Iowa Postcards
+    case 'grinnell:ancient-coins':        // Ancient Coins
+    case 'grinnell:geology':              // Geology (Fossils) Collection
+    case 'grinnell:physics-museum':       // Physics Museum
+    case 'grinnell:grinnell-in-china':    // Grinnell In China
+    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
       $view->orderby['fgs_createdDate_dt'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
       break;
@@ -1499,12 +1525,18 @@ function dg7_fetch_OBJ($path, $credentials) {
   // Open an SSH connection to support SFTP.  If the server is localhost (127.0.0.1) use port 2222, otherwise 22.
   $port = (($server === '127.0.0.1') ? 2222 : 22);
   $conn_id = ssh2_connect($server, $port);
-  ssh2_auth_password($conn_id, $username, $userpass);
-  $sftp = ssh2_sftp($conn_id);
+  if ($conn_id) {
+    ssh2_auth_password($conn_id, $username, $userpass);
+    $sftp = ssh2_sftp($conn_id);
+  } else {
+    watchdog($module_name, "ssh2_connect failed so no file transfer is possible.");
+    return FALSE;
+  }
 
   // Fetch the file via SFTP.
   $temp_file = drupal_tempnam('temporary://', 'import_content_');   // open a temp file
   $target = $sftp.$filepath;
+
   if (!$read = fopen("ssh2.sftp://$target", 'b')) {
     watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
     return FALSE;
