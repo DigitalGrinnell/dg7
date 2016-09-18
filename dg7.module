@@ -1523,8 +1523,9 @@ function dg7_fetch_OBJ($path, $credentials) {
   $username = $credentials['username'];
   $userpass = $credentials['password'];
 
-  // Open an SSH connection to support SFTP.
-  $conn_id = ssh2_connect($server, 22);
+  // Open an SSH connection to support SFTP.  If the server is localhost (127.0.0.1) use port 2222, otherwise 22.
+  $port = (($server === '127.0.0.1') ? 2222 : 22);
+  $conn_id = ssh2_connect($server, $port);
   if ($conn_id) {
     ssh2_auth_password($conn_id, $username, $userpass);
     $sftp = ssh2_sftp($conn_id);
