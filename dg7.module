@@ -1522,25 +1522,38 @@ function dg7_fetch_OBJ($path, $credentials) {
   $username = $credentials['username'];
   $userpass = $credentials['password'];
 
-  // Open an SSH connection to support SFTP.  If the server is localhost (127.0.0.1) use port 2222, otherwise 22.
-  $port = (($server === '127.0.0.1') ? 2222 : 22);
-  $conn_id = ssh2_connect($server, $port);
-  if ($conn_id) {
-    ssh2_auth_password($conn_id, $username, $userpass);
-    $sftp = ssh2_sftp($conn_id);
-  } else {
-    watchdog($module_name, "ssh2_connect failed so no file transfer is possible.");
-    return FALSE;
+  // If the server is localhost (127.0.0.1) we don't need ssh, just do simple file read.
+  $localhost = (($server === '127.0.0.1') ? TRUE : FALSE);
+
+  // If not localhost, open an SSH connection to support SFTP.
+  if (!$localhost) {
+    $conn_id = ssh2_connect($server, 22);
+    if ($conn_id) {
+      ssh2_auth_password($conn_id, $username, $userpass);
+      $sftp = ssh2_sftp($conn_id);
+    }
+    else {
+      watchdog($module_name, "ssh2_connect failed so no file transfer is possible.");
+      return FALSE;
+    }
   }
 
-  // Fetch the file via SFTP.
   $temp_file = drupal_tempnam('temporary://', 'import_content_');   // open a temp file
-  $target = $sftp.$filepath;
 
-  if (!$read = fopen("ssh2.sftp://$target", 'b')) {
-    watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
-    return FALSE;
+  // Fetch the file via SFTP...
+  if (!$localhost) {
+    $target = $sftp . $filepath;
+    if (!$read = fopen("ssh2.sftp://$target", 'b')) {
+      watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
+      return FALSE;
+    }
+  } else {  // ...Or simple fopen if this is a localhost file.
+    if (!$read = fopen($filepath, 'b')) {
+      watchdog($module_name, "Could not open remote file '%filepath' for reading.", array('%filepath' => $filepath), WATCHDOG_ERROR);
+      return FALSE;
+    }
   }
+
   if (!$write = fopen($temp_file, 'w')) {
     watchdog($module_name, "Could not open temporary file '%filename' for writing.", array('%filename' => $temp_file), WATCHDOG_ERROR);
     return FALSE;
