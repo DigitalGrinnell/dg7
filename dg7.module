@@ -1639,6 +1639,20 @@ function dg7_islandora_view_object() {
       'content' => $title,
     ));
 
+  // Get the dateCreated (Index Date).
+  $xpath_results = $xpath->query( variable_get('dg7_index_date_xpath', '/mods:mods/mods:originInfo/mods:dateCreated'));
+  if ($xpath_results->length > 0) {
+    $indexDate = $xpath_results->item(0)->nodeValue;
+
+    $tags[] = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'name' => 'citation_date',
+        'content' => $indexDate,
+      )
+    );
+  }
+
   /* Get Abstract
   $doc = new DOMDocument();
   $doc->loadXML($object['MODS']->content);
