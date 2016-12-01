@@ -582,6 +582,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 function dg7_preprocess_islandora_solr_teaser(&$variables) {
 
   // Add a creators_statement to be displayed.
+
   if (isset($variables['values']['dc.creator'])) {
     $val = '';
     foreach ($variables['values']['dc.creator'] as $creator) {
@@ -1589,3 +1590,97 @@ function dg7_fetch_CSV_defaults( ) {
 function dg7_create_object_post_ops($pid) {
   return;
 }
+
+
+/*
+ * Implements hook_islandora_view_object()
+ *
+ * Lifted and modified from:
+ * https://github.com/bondjimbond/islandora_twitter_cards/blob/master/islandora_twitter_cards.module
+ *
+ * The objective of this hook implementation is to generate Google Scholar meta tags
+ * for objects from certain collections.
+ *
+ */
+function dg7_islandora_view_object() {
+
+  // First grab the MODS metadata and set all variables
+
+  $object = menu_get_object('islandora_object', 2);
+  if (!isset($object['MODS'])) { return; }
+
+  // Get the object's collection memberships...
+  // If 'scholar' is NOT part of any collection name then return without doing more.
+
+  $scholarly = FALSE;
+  $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
+  foreach ($collections as $collection) {
+    $cid = $collection['object']['value'];
+    if (strpos($cid, 'scholar') > 0) { $scholarly = TRUE; }
+  }
+
+  if (!$scholarly) { return; }
+  $tags = array( );
+
+  // Get Title.
+  $doc = new DOMDocument();
+  $doc->loadXML($object['MODS']->content);
+  $xpath = new DOMXPath($doc);
+  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+  $xpath_results = $xpath->query( variable_get('dg7_title_xpath', '/mods:mods/mods:titleInfo/mods:title'));
+  if ($xpath_results->length == 0) { return; }
+  $title = $xpath_results->item(0)->nodeValue;
+  if (!$title) { return; }
+
+  $tags[] = array(
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'name' => 'citation_title',
+      'content' => $title,
+    ));
+
+  /* Get Abstract
+  $doc = new DOMDocument();
+  $doc->loadXML($object['MODS']->content);
+  $xpath = new DOMXPath($doc);
+  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+  $xpath_results = $xpath->query( variable_get('dg7_abstract_xpath', '/mods:mods/mods:abstract'));
+
+  // If there is no Abstract field, use a default message.
+  if ($xpath_results->length == 0) { $abstract = variable_get('dg7_no_description', 'No description given.');
+  } elseif (strlen($xpath_results->item(0)->nodeValue) == 0) {
+    $abstract = variable_get('dg7_no_description', 'No description given.');
+  } else {
+    $abstract = $xpath_results->item(0)->nodeValue;
+  } */
+
+  // Get Creator(s)... aka Author(s)
+  $xpath_results = $xpath->query( variable_get('dg7_creators_xpath', "/mods:mods/mods:name/mods:role/mods:roleTerm[text()='creator']/../../mods:namePart[not(@*)]"));
+  foreach ($xpath_results as $result) {
+    $tags[] = array(
+      '#tag' => 'meta',
+      '#attributes' => array(
+        'name' => 'citation_author',
+        'content' => $result->nodeValue,
+      ));
+  }
+
+  $pid = $object->id;
+  $tags[] = array(
+    '#tag' => 'meta',
+    '#attributes' => array(
+      'name' => 'citation_abstract_html_url',
+      'content' => "https://digital.grinnell.edu/islandora/object/".$pid,
+    )
+  );
+
+  /*
+  * Implement drupal_add_html_head() to inject the meta tags
+  */
+
+  foreach ($tags as $key => $val) {
+    drupal_add_html_head($val, $key);
+  }
+
+}
+
