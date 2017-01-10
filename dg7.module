@@ -278,7 +278,13 @@ function dg7_islandora_solr_advanced_search_form_alter_helper(&$form) {
           $term['field']['#options']['mods_subject_topic_mt'] = "Nationality";
           break;
 
-        default:        // If none of the above...leave the defaults intact minus the Faulconer specific stuff.
+        case 'grinnell:studio-student-art':      // Studio Student Art...   preliminary decision made to make this behave like a hybrid of artwork and the default.
+          unset($term['field']['#options']['dc.coverage']); // Coverage
+          unset($term['field']['#options']['dc.relation']); // Relations
+          $term['field']['#options']['dc.contributor'] = "Artist";
+          break;
+
+        default:        // If none of the above...leave the defaults intact minus the Faulconer and Studio Student Art stuff.
           unset($term['field']['#options']['mods_relatedItem_admin_note_location_mt']); // Location
           unset($term['field']['#options']['mods_physicalDescription_form_mt']); // Medium
           unset($term['field']['#options']['mods_identifier_local_ms']); // Accession Number
@@ -464,6 +470,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:soviet-graphic-art':       // The Faulconer's Soviet Graphic Art sub-collection
     case 'grinnell:recent-art-acquisitions':  // The Faulconer's Recent Acquisitions sub-collection
     case 'grinnell:faulconer-suppressed':
+    case 'grinnell:studio-student-art':       // Studio Student Art sub-collection
       $isq->solrParams['sort'] .= ', dg_creators_s asc';
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
@@ -560,6 +567,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
     case 'grinnell:faulconer':              // The Faulconer Art collection
     case 'grinnell:soviet-graphic-art':     // The Faulconer's Soviet Graphic Art sub-collection
     case 'grinnell:faulconer-suppressed':
+    case 'grinnell:studio-student-art':      // Studio Student Art sub-collection
       $view->orderby['dg_creators_s'] = 'asc';
       $view->orderby['fgs_createdDate_dt'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
