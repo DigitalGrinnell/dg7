@@ -1341,7 +1341,7 @@ function dg7_download_access( ) {
       } else {
         $msg = "Sorry, book object '$pid' has no downloadable PDF content.";
         drupal_set_message($msg, 'warning');
-        watchdog("dg7", $msg);
+        # watchdog("dg7", $msg);
         return FALSE;
       }
     } else {
