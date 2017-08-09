@@ -278,7 +278,7 @@ function dg7_islandora_solr_advanced_search_form_alter_helper(&$form) {
           $term['field']['#options']['mods_subject_topic_mt'] = "Nationality";
           break;
 
-        case 'grinnell:studio-student-art':      // Studio Student Art...   preliminary decision made to make this behave like a hybrid of artwork and the default.
+        case 'grinnell:studio-student-art':      // Studio Student Art... preliminary decision made to make this behave like a hybrid of artwork and the default.
           unset($term['field']['#options']['dc.coverage']); // Coverage
           unset($term['field']['#options']['dc.relation']); // Relations
           $term['field']['#options']['dc.contributor'] = "Artist";
@@ -448,8 +448,8 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:geology':              // Geology (Fossils) Collection
     case 'grinnell:physics-museum':       // Physics Museum
     case 'grinnell:grinnell-in-china':    // Grinnell In China
-    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
-      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
@@ -472,7 +472,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:faulconer-suppressed':
     case 'grinnell:studio-student-art':       // Studio Student Art sub-collection
       $isq->solrParams['sort'] .= ', dg_creators_s asc';
-      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
@@ -480,7 +480,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     default:   // Not entering a specialized collection.
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
-      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_dt asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       break;
   }
 
@@ -519,8 +519,9 @@ function dg7_theme_registry_alter(&$theme_registry) {
   return;
 }
 
-
 /**
+ * No longer needed as of 9-August-2017!  We now use hook_islandora_solr_query_alter instead.
+ *
  * Implements hook_islandora_solr_views_query_alter.
  *
  * This CUSTOM hook is called from execute() in ..islandora_solr_views/islandora_solr_views_query.inc
@@ -528,7 +529,8 @@ function dg7_theme_registry_alter(&$theme_registry) {
  * @param $view
  * @param null $viewName
  * @param null $cID
- */
+ *
+ *
 function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL) {
 
   // dsm($view);
@@ -553,8 +555,8 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
     case 'grinnell:geology':              // Geology (Fossils) Collection
     case 'grinnell:physics-museum':       // Physics Museum
     case 'grinnell:grinnell-in-china':    // Grinnell In China
-    case 'grinnell:alunmioralhistories':  // Alumni Oral Histories
-      $view->orderby['fgs_createdDate_dt'] = 'asc';
+    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
+      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
       break;
 
@@ -569,7 +571,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
     case 'grinnell:faulconer-suppressed':
     case 'grinnell:studio-student-art':      // Studio Student Art sub-collection
       $view->orderby['dg_creators_s'] = 'asc';
-      $view->orderby['fgs_createdDate_dt'] = 'asc';
+      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
       $view->orderby['fgs_label_s'] = 'asc';
       break;
 
@@ -577,12 +579,14 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 
     default:   // Not entering a specialized collection.
       $view->orderby['fgs_label_s'] = 'asc';
-      $view->orderby['fgs_createdDate_dt'] = 'asc';
+      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
       break;
   }
 
   return;
 }
+
+*/
 
 /**
  * Implements hook_preprocess_THEME().
