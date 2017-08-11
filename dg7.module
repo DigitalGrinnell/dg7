@@ -41,7 +41,7 @@ function dg7_views_default_views_alter(&$views) {
 
   // Alter only the 'collection' view.
   if (array_key_exists('collection', $views)) {
-    if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'Collection' view.", 'info'); }
+    // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'Collection' view.", 'info'); }
 
     // The definition from the exported view goes here.
     $view = new view();
