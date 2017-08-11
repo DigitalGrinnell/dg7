@@ -41,11 +41,12 @@ function dg7_views_default_views_alter(&$views) {
 
   // Alter only the 'collection' view.
   if (array_key_exists('collection', $views)) {
-    if (user_access('administer')) { drupal_set_message('Attention: dg7_views_default_views_alter is now overriding the collection view.', 'info'); }
+    if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'Collection' view.", 'info'); }
+
     // The definition from the exported view goes here.
     $view = new view();
     $view->name = 'collection';
-    $view->description = '';
+    $view->description = 'This is a set of views pages that make up most of DG\'s display.  This view IS OVERRIDEN in dg7.module code!';
     $view->tag = 'default';
     $view->base_table = 'islandora_solr';
     $view->human_name = 'Collection';
@@ -53,12 +54,11 @@ function dg7_views_default_views_alter(&$views) {
     $view->api_version = '3.0';
     $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
 
-    /* Display: Master */
+
+    /* Display: Master ----------------------------------------------------------------------------------------------*/
     $handler = $view->new_display('default', 'Master', 'default');
-    $handler->display->display_options['use_ajax'] = TRUE;
-    $handler->display->display_options['use_more'] = TRUE;
+    $handler->display->display_options['title'] = '<none>';
     $handler->display->display_options['use_more_always'] = FALSE;
-    $handler->display->display_options['use_more_text'] = 'See all collections';
     $handler->display->display_options['access']['type'] = 'none';
     $handler->display->display_options['cache']['type'] = 'none';
     $handler->display->display_options['query']['type'] = 'views_query';
@@ -70,329 +70,77 @@ function dg7_views_default_views_alter(&$views) {
     $handler->display->display_options['pager']['options']['quantity'] = '9';
     $handler->display->display_options['style_plugin'] = 'default';
     $handler->display->display_options['row_plugin'] = 'fields';
-    /* Header: Global: Text area */
-    $handler->display->display_options['header']['area']['id'] = 'area';
-    $handler->display->display_options['header']['area']['table'] = 'views';
-    $handler->display->display_options['header']['area']['field'] = 'area';
-    $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
-
-function lastRow() {  
-  var lastRowDesktop = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 3;
-  var lastRowTablet = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 2;
-  if (
-    (lastRowDesktop == 1 && lastRowTablet == 1) || 
-    (lastRowDesktop == 0 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) || 
-    (lastRowDesktop == 1 && lastRowTablet == 0 && jQuery(\'.device-lg\').is(\':visible\')) 
-  ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
-  }
-  else if (
-    (lastRowDesktop == 2 && lastRowTablet == 0) ||
-    (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-lg\').is(\':visible\'))
-    ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-2).wrapAll(\'<div class="last-row"></div>\');
-  }
-  else if (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
-  }
-}
-
-jQuery(document).ready(function() {
-  jQuery(\'#views-bootstrap-thumbnail-1 .col-lg-4\').addClass(\'col-md-6\');
-  jQuery(\'#views-bootstrap-thumbnail-1 .row\').contents().unwrap();
-  jQuery(\'#views-bootstrap-thumbnail-1\').wrapInner(\'<div class="row"></div>\');
-  lastRow();
-  jQuery(\'#views-bootstrap-thumbnail-1 img\').addClass(\'img-responsive\');
-  jQuery(\'#edit-terms-0-field\').val(\'catch_all_fields_mt\');
-  if (jQuery(\'[id^=block-views-collection-block]\').length != 0) {
-    //do something here to hide the non-block view
-    jQuery(\'.view-display-id-block\').hide();
-  }
-});
-
-jQuery( window ).resize(function() {
-  jQuery(\'.last-row\').contents().unwrap();  
-  lastRow();
-});
-</script>
-
-<style type="text/css">
-
-.last-row {
-  float: none;
-  margin: auto;
-  text-align: center;
-}
-
-.last-row .col {
-  float: none;
-  margin: auto;
-  display: inline-block;
-  text-align: center;
-}
-
-.intro-text {
-  background: #FAE6C1;
-  padding: 0px 25px 60px 25px;
-  border: 1px solid #E3C181;
-  border-radius: 10px;
-}
-
-.intro-text-no-form {
-  padding: 25px;
-}
-
-.view-header {
-  margin-bottom: 25px;
-}
-
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
-.views-field-TN-Image {
-  height: 175px;
-  overflow: hidden;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.thumbnail {
-  padding: 0px;
-  border-color: #FFF;
-}
-
-.collection-tile  {
-  background-color: #FAE6C1;
-  margin: 0;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  padding: 14px;
-  line-height: 1.25;
-  height: 73px;
-  overflow: hidden;
-  text-align: center;
-}
-
-.collection-tile a, .collection-tile a:link, .collection-tile a:visited, .collection-tile a:hover, .collection-tile a:active {
-  color: #9E4024;
-  text-decoration: none;
-}
-
-</style>
-
-<div class="intro-text intro-text-no-form">
-<p>Primary source materials from collections across campus.</p>
-</div>
-
-<h3 style="margin-top: 25px;">Browse by Collection</h3>';
-    $handler->display->display_options['header']['area']['format'] = 'php_code';
     /* Footer: Global: Text area */
-    $handler->display->display_options['footer']['area']['id'] = 'area';
-    $handler->display->display_options['footer']['area']['table'] = 'views';
-    $handler->display->display_options['footer']['area']['field'] = 'area';
-    $handler->display->display_options['footer']['area']['content'] = '<!--<div class="intro-text">
-<h3>Search All Collections</h3>
-<form action="/" method="post" class="form-inline" accept-charset="UTF-8">
- <input type="hidden" name="terms[0][field]" value="catch_all_fields_mt" />
- <input type="text" name="terms[0][search]" value="" class="form-control" id="big-middle-search-box" maxlength="128" />
-<input style="visibility:hidden;position:fixed;top:-1000px;right:-1000px;" type="submit" id="edit-terms-0-hidden-submit" name="op" value="Search" class="form-submit art-button" /><input type="hidden" name="form_build_id" value="form-8fdJmigXivSseH3hAWDOlqikSSMrv1wCx1G_6dZ3LwE" />
-<input type="hidden" name="form_token" value="OipDVeXYoqqoLIg4un4QW2pclrZI-XM9pvgtjhlcNdc" />
-<input type="hidden" name="form_id" value="islandora_solr_advanced_search_form" />
-<button id="big-middle-search-button" class="form-submit btn btn-default btn-sm" name="op" type="submit"><div class="mag-glass"><span class="glyphicon glyphicon-search"></span></div></button>
-</form>
-</div>-->
-<div class="device-md hidden-lg"></div>
-<div class="device-lg hidden-md"></div>';
-    $handler->display->display_options['footer']['area']['format'] = 'php_code';
-    /* Field: Islandora Solr: Teaser */
-    $handler->display->display_options['fields']['Islandora Teaser']['id'] = 'Islandora Teaser';
-    $handler->display->display_options['fields']['Islandora Teaser']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['Islandora Teaser']['field'] = 'Islandora Teaser';
-    $handler->display->display_options['fields']['Islandora Teaser']['label'] = '';
-    $handler->display->display_options['fields']['Islandora Teaser']['element_label_colon'] = FALSE;
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    /* Field: Islandora Solr: dg_creators_s */
+    $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
+    $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
+    $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
+    $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_ms */
+    $handler->display->display_options['fields']['fgs_label_ms']['id'] = 'fgs_label_ms';
+    $handler->display->display_options['fields']['fgs_label_ms']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_ms']['field'] = 'fgs_label_ms';
+    $handler->display->display_options['fields']['fgs_label_ms']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_ms']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_ms']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_ms']['link_to_object'] = 0;
+    /* Field: Islandora Solr: mods_abstract_ms */
+    $handler->display->display_options['fields']['mods_abstract_ms']['id'] = 'mods_abstract_ms';
+    $handler->display->display_options['fields']['mods_abstract_ms']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['mods_abstract_ms']['field'] = 'mods_abstract_ms';
+    $handler->display->display_options['fields']['mods_abstract_ms']['label'] = '';
+    $handler->display->display_options['fields']['mods_abstract_ms']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['mods_abstract_ms']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['mods_abstract_ms']['link_to_object'] = 0;
+    /* Field: Islandora Solr: mods_extension_pull_quote_ms */
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['id'] = 'mods_extension_pull_quote_ms';
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['field'] = 'mods_extension_pull_quote_ms';
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['label'] = '';
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['link_to_object'] = 0;
+    /* Field: Islandora Solr: TN Image */
+    $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
+    $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
+    $handler->display->display_options['fields']['TN Image']['label'] = '';
+    $handler->display->display_options['fields']['TN Image']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
+    /* Field: Islandora Solr: PID */
+    $handler->display->display_options['fields']['PID']['id'] = 'PID';
+    $handler->display->display_options['fields']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['PID']['field'] = 'PID';
+    $handler->display->display_options['fields']['PID']['label'] = '';
+    $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
+    $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_ms]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_ms]">[fgs_label_ms]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />    ';
+    $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
     /* Sort criterion: Islandora Solr: fgs_label_s */
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
 
-    /* Display: Simple Object List (Not for Collection Objects) */
-    $handler = $view->new_display('block', 'Simple Object List (Not for Collection Objects)', 'block');
-    $handler->display->display_options['defaults']['style_plugin'] = FALSE;
-    $handler->display->display_options['style_plugin'] = 'default';
-    $handler->display->display_options['defaults']['style_options'] = FALSE;
-    $handler->display->display_options['defaults']['row_plugin'] = FALSE;
-    $handler->display->display_options['row_plugin'] = 'fields';
-    $handler->display->display_options['defaults']['row_options'] = FALSE;
-    $handler->display->display_options['defaults']['header'] = FALSE;
-    /* Header: Global: Text area */
-    $handler->display->display_options['header']['area']['id'] = 'area';
-    $handler->display->display_options['header']['area']['table'] = 'views';
-    $handler->display->display_options['header']['area']['field'] = 'area';
-    $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
-function lastRow() {  
-  var lastRowDesktop = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 3;
-  var lastRowTablet = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 2;
-  if (
-    (lastRowDesktop == 1 && lastRowTablet == 1) || 
-    (lastRowDesktop == 0 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) || 
-    (lastRowDesktop == 1 && lastRowTablet == 0 && jQuery(\'.device-lg\').is(\':visible\')) 
-  ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
-  }
-  else if (
-    (lastRowDesktop == 2 && lastRowTablet == 0) ||
-    (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-lg\').is(\':visible\'))
-    ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-2).wrapAll(\'<div class="last-row"></div>\');
-  }
-  else if (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
-  }
-}
 
-jQuery(document).ready(function() {
-  jQuery(\'#views-bootstrap-thumbnail-1 .col-lg-4\').addClass(\'col-md-6\');
-  jQuery(\'#views-bootstrap-thumbnail-1 .row\').contents().unwrap();
-  jQuery(\'#views-bootstrap-thumbnail-1\').wrapInner(\'<div class="row"></div>\');
-  lastRow();
-  jQuery(\'#views-bootstrap-thumbnail-1 img\').addClass(\'img-responsive\');
-  jQuery(\'#edit-terms-0-field\').val(\'catch_all_fields_mt\');
-  if ($jQuery(\'[id^=block-views-collection-block]\').length != 0) {
-    //do something here to hide the non-block view
-  }
-});
 
-jQuery( window ).resize(function() {
-  jQuery(\'.last-row\').contents().unwrap();  
-  lastRow();
-});
-</script>
-
-<style type="text/css">
-
-.last-row {
-  float: none;
-  margin: auto;
-  text-align: center;
-}
-
-.last-row .col {
-  float: none;
-  margin: auto;
-  display: inline-block;
-  text-align: center;
-}
-
-.intro-text {
-  background: #FAE6C1;
-  padding: 0px 25px 60px 25px;
-  border: 1px solid #E3C181;
-  border-radius: 10px;
-}
-
-.intro-text-no-form {
-  padding: 25px;
-}
-
-.view-header {
-  margin-bottom: 25px;
-}
-
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
-.views-field-TN-Image {
-  height: 175px;
-  overflow: hidden;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-}
-
-.thumbnail {
-  padding: 0px;
-  border-color: #FFF;
-}
-
-.collection-tile  {
-  background-color: #FAE6C1;
-  margin: 0;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 4px;
-  padding: 14px;
-  line-height: 1.25;
-  height: 73px;
-  overflow: hidden;
-  text-align: center;
-}
-
-.collection-tile a, .collection-tile a:link, .collection-tile a:visited, .collection-tile a:hover, .collection-tile a:active {
-  color: #9E4024;
-  text-decoration: none;
-}
-
-</style>';
-    $handler->display->display_options['header']['area']['format'] = 'php_code';
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
-    /* Contextual filter: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_action'] = 'not found';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_argument_type'] = 'fixed';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['number_of_records'] = '0';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['format'] = 'default_summary';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary_options']['items_per_page'] = '25';
-    $handler->display->display_options['defaults']['filter_groups'] = FALSE;
-    $handler->display->display_options['defaults']['filters'] = FALSE;
-    /* Filter criterion: Islandora Solr: RELS_EXT_hasModel_uri_s */
-    $handler->display->display_options['filters']['RELS_EXT_hasModel_uri_s']['id'] = 'RELS_EXT_hasModel_uri_s';
-    $handler->display->display_options['filters']['RELS_EXT_hasModel_uri_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['filters']['RELS_EXT_hasModel_uri_s']['field'] = 'RELS_EXT_hasModel_uri_s';
-    $handler->display->display_options['filters']['RELS_EXT_hasModel_uri_s']['operator'] = '!=';
-    $handler->display->display_options['filters']['RELS_EXT_hasModel_uri_s']['value'] = 'info:fedora/islandora:collectionCModel';
-    $handler->display->display_options['block_description'] = 'Simple Object List (Not for Collections)';
-
-    /* Display: Top-Level-Collection Block */
-    $handler = $view->new_display('block', 'Top-Level-Collection Block', 'block_2');
+    /* Display: Collection Page - Root ------------------------------------------------------------------------------*/
+    $handler = $view->new_display('page', 'Collection Page - Root', 'collection_page_root');
+    $handler->display->display_options['display_description'] = 'This is a new page view specifically for the root collection and its immediate subordinates.';
     $handler->display->display_options['defaults']['style_plugin'] = FALSE;
     $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
     $handler->display->display_options['style_options']['columns'] = '3';
@@ -405,6 +153,7 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['header']['area']['id'] = 'area';
     $handler->display->display_options['header']['area']['table'] = 'views';
     $handler->display->display_options['header']['area']['field'] = 'area';
+    $handler->display->display_options['header']['area']['empty'] = TRUE;
     $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
 function lastRow() {  
@@ -477,30 +226,8 @@ jQuery( window ).resize(function() {
   margin-bottom: 25px;
 }
 
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
 .views-field-TN-Image {
-  height: 175px;
+  height: 175px !important;
   overflow: hidden;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
@@ -536,6 +263,13 @@ jQuery( window ).resize(function() {
 
 <h2 style="margin-top: 25px;">Browse by Collection</h2>';
     $handler->display->display_options['header']['area']['format'] = 'php_code';
+    $handler->display->display_options['defaults']['footer'] = FALSE;
+    /* Footer: Global: Text area */
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+    $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
     $handler->display->display_options['defaults']['fields'] = FALSE;
     /* Field: Islandora Solr: PID */
     $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -545,38 +279,50 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
     /* Field: Islandora Solr: TN Image */
     $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
     $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['label'] = '';
     $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a aria-hidden="true" href="/islandora/object/[PID]"><img src="https://digital.grinnell.edu/islandora/object/[PID]/datastream/TN/view" alt="Collection thumbnail" /></a>';
-    $handler->display->display_options['fields']['TN Image']['alter']['path'] = 'islandora/object/[PID]';
+    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
-    /* Field: Islandora Solr: fgs_label_s */
-    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['fgs_label_s']['element_type'] = 'h3';
-    $handler->display->display_options['fields']['fgs_label_s']['element_class'] = 'collection-tile';
-    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 1;
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+    $handler->display->display_options['defaults']['sorts'] = FALSE;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+    /* Sort criterion: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
-    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/islandora:root';
-    $handler->display->display_options['block_description'] = 'Top-Level Collection Block';
+    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/islandora:root';
+    $handler->display->display_options['path'] = 'islandora/object/islandora:root';
 
-    /* Display: Scholarship at Grinnell Block */
-    $handler = $view->new_display('block', 'Scholarship at Grinnell Block', 'block_3');
+
+
+    /* Display: Collection Page - Scholarship ------------------------------------------------------------------------*/
+    $handler = $view->new_display('page', 'Collection Page - Scholarship', 'collection_page_scholarship');
+    $handler->display->display_options['display_description'] = 'This is a new page view specifically for the Scholarship collection and its immediate subordinates.';
     $handler->display->display_options['defaults']['style_plugin'] = FALSE;
     $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
     $handler->display->display_options['style_options']['columns'] = '3';
@@ -589,6 +335,7 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['header']['area']['id'] = 'area';
     $handler->display->display_options['header']['area']['table'] = 'views';
     $handler->display->display_options['header']['area']['field'] = 'area';
+    $handler->display->display_options['header']['area']['empty'] = TRUE;
     $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
 function lastRow() {  
@@ -661,30 +408,8 @@ jQuery( window ).resize(function() {
   margin-bottom: 25px;
 }
 
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
 .views-field-TN-Image {
-  height: 175px;
+  height: 175px !important;
   overflow: hidden;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
@@ -713,13 +438,20 @@ jQuery( window ).resize(function() {
 }
 
 </style>
-
 <div class="intro-text intro-text-no-form">
+<h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">Scholarship at Grinnell</h1>
 <p>Publications, research papers and posters, performance programs, and other materials that document the scholarly and creative accomplishments of Grinnell College\'s students, faculty and staff, as well as syllabi, handouts, and related materials created by Grinnell College faculty for courses at Grinnell.</p>
 </div>
 
 <h2 style="margin-top: 25px;">Browse by Collection</h2>';
     $handler->display->display_options['header']['area']['format'] = 'php_code';
+    $handler->display->display_options['defaults']['footer'] = FALSE;
+    /* Footer: Global: Text area */
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+    $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
     $handler->display->display_options['defaults']['fields'] = FALSE;
     /* Field: Islandora Solr: PID */
     $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -729,38 +461,52 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
     /* Field: Islandora Solr: TN Image */
     $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
     $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['label'] = '';
     $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a aria-hidden="true" href="/islandora/object/[PID]"><img src="https://digital.grinnell.edu/islandora/object/[PID]/datastream/TN/view" alt="Collection thumbnail" /></a>';
-    $handler->display->display_options['fields']['TN Image']['alter']['path'] = 'islandora/object/[PID]';
+    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
-    /* Field: Islandora Solr: fgs_label_s */
-    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['fgs_label_s']['element_type'] = 'h3';
-    $handler->display->display_options['fields']['fgs_label_s']['element_class'] = 'collection-tile';
-    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 1;
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+    $handler->display->display_options['defaults']['sorts'] = FALSE;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+    /* Sort criterion: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
-    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/grinnell:scholarship';
-    $handler->display->display_options['block_description'] = 'Scholarship at Grinnell Collection Block';
+    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/grinnell:scholarship';
+    $handler->display->display_options['path'] = 'islandora/object/grinnell:scholarship';
 
-    /* Display:  Special Collections Block */
-    $handler = $view->new_display('block', 'Special Collections Block', 'block_4');
+
+
+
+    /* Display: Collection Page - Special Collections ----------------------------------------------------------------*/
+    /* Display: Collection Page - Scholarship ------------------------------------------------------------------------*/
+    $handler = $view->new_display('page', 'Collection Page - Scholarship', 'collection_page_scholarship');
+    $handler->display->display_options['display_description'] = 'This is a new page view specifically for the Scholarship collection and its immediate subordinates.';
     $handler->display->display_options['defaults']['style_plugin'] = FALSE;
     $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
     $handler->display->display_options['style_options']['columns'] = '3';
@@ -773,6 +519,7 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['header']['area']['id'] = 'area';
     $handler->display->display_options['header']['area']['table'] = 'views';
     $handler->display->display_options['header']['area']['field'] = 'area';
+    $handler->display->display_options['header']['area']['empty'] = TRUE;
     $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
 function lastRow() {  
@@ -845,30 +592,8 @@ jQuery( window ).resize(function() {
   margin-bottom: 25px;
 }
 
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
 .views-field-TN-Image {
-  height: 175px;
+  height: 175px !important;
   overflow: hidden;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
@@ -897,13 +622,20 @@ jQuery( window ).resize(function() {
 }
 
 </style>
-
 <div class="intro-text intro-text-no-form">
-<p>Digitized copies of materials housed in Grinnell College’s Special Collections and Archives, including photographs, letters, and documents.</p>
+<h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">Scholarship at Grinnell</h1>
+<p>Publications, research papers and posters, performance programs, and other materials that document the scholarly and creative accomplishments of Grinnell College\'s students, faculty and staff, as well as syllabi, handouts, and related materials created by Grinnell College faculty for courses at Grinnell.</p>
 </div>
 
 <h2 style="margin-top: 25px;">Browse by Collection</h2>';
     $handler->display->display_options['header']['area']['format'] = 'php_code';
+    $handler->display->display_options['defaults']['footer'] = FALSE;
+    /* Footer: Global: Text area */
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+    $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
     $handler->display->display_options['defaults']['fields'] = FALSE;
     /* Field: Islandora Solr: PID */
     $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -913,38 +645,51 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
     /* Field: Islandora Solr: TN Image */
     $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
     $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['label'] = '';
     $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a aria-hidden="true" href="/islandora/object/[PID]"><img src="https://digital.grinnell.edu/islandora/object/[PID]/datastream/TN/view" alt="Collection thumbnail" /></a>';
-    $handler->display->display_options['fields']['TN Image']['alter']['path'] = 'islandora/object/[PID]';
+    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
-    /* Field: Islandora Solr: fgs_label_s */
-    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['fgs_label_s']['element_type'] = 'h3';
-    $handler->display->display_options['fields']['fgs_label_s']['element_class'] = 'collection-tile';
-    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 1;
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+    $handler->display->display_options['defaults']['sorts'] = FALSE;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+    /* Sort criterion: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
-    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/grinnell:special-collections';
-    $handler->display->display_options['block_description'] = 'Special Collections Collection Block';
+    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/grinnell:scholarship';
+    $handler->display->display_options['path'] = 'islandora/object/grinnell:scholarship';
 
-    /* Display: Campus Collections Block */
-    $handler = $view->new_display('block', 'Campus Collections Block', 'block_5');
+
+
+
+    /* Display: Collection Page - Campus Collections */
+    $handler = $view->new_display('page', 'Collection Page - Campus Collections', 'collection_page_campus_collections');
+    $handler->display->display_options['display_description'] = 'This is a new page view specifically for the Campus Collections collection and its immediate subordinates.';
     $handler->display->display_options['defaults']['style_plugin'] = FALSE;
     $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
     $handler->display->display_options['style_options']['columns'] = '3';
@@ -957,6 +702,7 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['header']['area']['id'] = 'area';
     $handler->display->display_options['header']['area']['table'] = 'views';
     $handler->display->display_options['header']['area']['field'] = 'area';
+    $handler->display->display_options['header']['area']['empty'] = TRUE;
     $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
 function lastRow() {  
@@ -1029,30 +775,8 @@ jQuery( window ).resize(function() {
   margin-bottom: 25px;
 }
 
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
 .views-field-TN-Image {
-  height: 175px;
+  height: 175px !important;
   overflow: hidden;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
@@ -1081,13 +805,20 @@ jQuery( window ).resize(function() {
 }
 
 </style>
-
 <div class="intro-text intro-text-no-form">
+<h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">Grinnell College Campus Collections</h1>
 <p>Primary source materials from collections across campus.</p>
 </div>
 
 <h2 style="margin-top: 25px;">Browse by Collection</h2>';
     $handler->display->display_options['header']['area']['format'] = 'php_code';
+    $handler->display->display_options['defaults']['footer'] = FALSE;
+    /* Footer: Global: Text area */
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+    $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
     $handler->display->display_options['defaults']['fields'] = FALSE;
     /* Field: Islandora Solr: PID */
     $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -1097,27 +828,36 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
     /* Field: Islandora Solr: TN Image */
     $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
     $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
     $handler->display->display_options['fields']['TN Image']['label'] = '';
     $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a aria-hidden="true" href="/islandora/object/[PID]"><img src="https://digital.grinnell.edu/islandora/object/[PID]/datastream/TN/view" alt="Collection thumbnail" /></a>';
-    $handler->display->display_options['fields']['TN Image']['alter']['path'] = 'islandora/object/[PID]';
+    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
-    /* Field: Islandora Solr: fgs_label_s */
-    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['fgs_label_s']['element_type'] = 'h3';
-    $handler->display->display_options['fields']['fgs_label_s']['element_class'] = 'collection-tile';
-    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 1;
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+    $handler->display->display_options['defaults']['sorts'] = FALSE;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+    /* Sort criterion: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
@@ -1125,10 +865,14 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/grinnell:campus-collections';
-    $handler->display->display_options['block_description'] = 'Campus Collections Collection Block';
+    $handler->display->display_options['path'] = 'islandora/object/grinnell:campus-collections';
 
-    /* Display: Collection Object Grid (for Collection Objects ONLY) */
-    $handler = $view->new_display('block', 'Collection Object Grid (for Collection Objects ONLY)', 'block_6');
+
+
+
+    /* Display: Collection Page - Special Collections ----------------------------------------------------------------*/
+    $handler = $view->new_display('page', 'Collection Page - Special Collections', 'collection_page_special_collections');
+    $handler->display->display_options['display_description'] = 'This is a new page view specifically for the Special Collections and Archives and its immediate subordinates.';
     $handler->display->display_options['defaults']['style_plugin'] = FALSE;
     $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
     $handler->display->display_options['style_options']['columns'] = '3';
@@ -1141,6 +885,7 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['header']['area']['id'] = 'area';
     $handler->display->display_options['header']['area']['table'] = 'views';
     $handler->display->display_options['header']['area']['field'] = 'area';
+    $handler->display->display_options['header']['area']['empty'] = TRUE;
     $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
 
 function lastRow() {  
@@ -1213,30 +958,8 @@ jQuery( window ).resize(function() {
   margin-bottom: 25px;
 }
 
-#big-middle-search-box {
-  width: 90%;
-  float: left;
-}
-
-#big-middle-search-button {
-  background-color: #9E4024;
-  text-align: center;
-  color: #FFF;
-  float: right;
-  width: 7%;
-  height: 38px;
-  font-size: 19px;
-  padding: 0px;
-}
-
-.mag-glass {
-  display: block;
-  text-align: center;
-  margin: auto;
-}
-
 .views-field-TN-Image {
-  height: 175px;
+  height: 175px !important;
   overflow: hidden;
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
@@ -1265,13 +988,20 @@ jQuery( window ).resize(function() {
 }
 
 </style>
-
 <div class="intro-text intro-text-no-form">
-<p>Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.</p>
+<h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">Special Collections and Archives</h1>
+<p>Digitized copies of materials housed in Grinnell College’s Special Collections and Archives, including photographs, letters, and documents.</p>
 </div>
 
-<h3 style="margin-top: 25px;">Browse by Collection</h3>';
+<h2 style="margin-top: 25px;">Browse by Collection</h2>';
     $handler->display->display_options['header']['area']['format'] = 'php_code';
+    $handler->display->display_options['defaults']['footer'] = FALSE;
+    /* Footer: Global: Text area */
+    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+    $handler->display->display_options['footer']['area_1']['table'] = 'views';
+    $handler->display->display_options['footer']['area_1']['field'] = 'area';
+    $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+    $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
     $handler->display->display_options['defaults']['fields'] = FALSE;
     /* Field: Islandora Solr: PID */
     $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -1281,34 +1011,63 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
-    /* Field: Islandora Solr: TN Image */
-    $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
-    $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
-    $handler->display->display_options['fields']['TN Image']['label'] = '';
-    $handler->display->display_options['fields']['TN Image']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     /* Field: Islandora Solr: fgs_label_s */
     $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
     $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['make_link'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['alter']['path'] = 'islandora/object/[PID]';
-    $handler->display->display_options['fields']['fgs_label_s']['element_type'] = 'h3';
-    $handler->display->display_options['fields']['fgs_label_s']['element_class'] = 'collection-tile';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
     $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 1;
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
+    /* Field: Islandora Solr: TN Image */
+    $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
+    $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
+    $handler->display->display_options['fields']['TN Image']['label'] = '';
+    $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
+    $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
+    $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+    $handler->display->display_options['defaults']['sorts'] = FALSE;
+    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+    /* Sort criterion: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+    /* Sort criterion: Islandora Solr: PID */
+    $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+    $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+    $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
-    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/islandora:root';
-    $handler->display->display_options['block_description'] = 'Collection Object Grid (for Collection Objects ONLY)';
+    /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/grinnell:special-collections';
+    $handler->display->display_options['path'] = 'islandora/object/grinnell:special-collections';
+
+
+
+
+
+    /* Display: Simple Object List (Default View) */
+    $handler = $view->new_display('block', 'Simple Object List (Default View)', 'block');
+    $handler->display->display_options['display_description'] = 'This block definition overriddes previous versions.';
+    $handler->display->display_options['defaults']['arguments'] = FALSE;
+    /* Contextual filter: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_action'] = 'not found';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_argument_type'] = 'fixed';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['number_of_records'] = '0';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['format'] = 'default_summary';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary_options']['items_per_page'] = '25';
+    $handler->display->display_options['block_description'] = 'Simple Object List (Not for Collections)';
 
 
     // Override the existing view with this new definition.
