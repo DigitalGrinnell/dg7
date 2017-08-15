@@ -28,6 +28,192 @@ define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollectio
  */
 
 /**
+ *  Handler code for hook_view_default_views_alter (below).
+ *
+function view_handler( $collection, &$view ) {
+  $handler = $view->new_display('page', $collection['title'], $collection['id']);
+  $handler->display->display_options['display_description'] = "This is a new page view specifically for the $collection['description'] collection and its immediate subordinates.";
+  $handler->display->display_options['defaults']['style_plugin'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
+  $handler->display->display_options['style_options']['columns'] = '3';
+  $handler->display->display_options['defaults']['style_options'] = FALSE;
+  $handler->display->display_options['defaults']['row_plugin'] = FALSE;
+  $handler->display->display_options['row_plugin'] = 'fields';
+  $handler->display->display_options['defaults']['row_options'] = FALSE;
+  $handler->display->display_options['defaults']['header'] = FALSE;
+  // Header: Global: Text area
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
+  $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
+
+function lastRow() {  
+  var lastRowDesktop = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 3;
+  var lastRowTablet = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 2;
+  if (
+    (lastRowDesktop == 1 && lastRowTablet == 1) || 
+    (lastRowDesktop == 0 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) || 
+    (lastRowDesktop == 1 && lastRowTablet == 0 && jQuery(\'.device-lg\').is(\':visible\')) 
+  ) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
+  }
+  else if (
+    (lastRowDesktop == 2 && lastRowTablet == 0) ||
+    (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-lg\').is(\':visible\'))
+    ) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-2).wrapAll(\'<div class="last-row"></div>\');
+  }
+  else if (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
+  }
+}
+
+jQuery(document).ready(function() {
+  jQuery(\'#views-bootstrap-thumbnail-1 .col-lg-4\').addClass(\'col-md-6\');
+  jQuery(\'#views-bootstrap-thumbnail-1 .row\').contents().unwrap();
+  jQuery(\'#views-bootstrap-thumbnail-1\').wrapInner(\'<div class="row"></div>\');
+  lastRow();
+  jQuery(\'#views-bootstrap-thumbnail-1 img\').addClass(\'img-responsive\');
+  jQuery(\'#edit-terms-0-field\').val(\'catch_all_fields_mt\');
+  if (jQuery(\'[id^=block-views-collection-block]\').length != 0) {
+    //do something here to hide the non-block view
+    jQuery(\'.view-display-id-block\').hide();
+  }
+});
+
+jQuery( window ).resize(function() {
+  jQuery(\'.last-row\').contents().unwrap();  
+  lastRow();
+});
+</script>
+
+<style type="text/css">
+
+.last-row {
+  float: none;
+  margin: auto;
+  text-align: center;
+}
+
+.last-row .col {
+  float: none;
+  margin: auto;
+  display: inline-block;
+  text-align: center;
+}
+
+.intro-text {
+  background: #FAE6C1;
+  padding: 0px 25px 60px 25px;
+  border: 1px solid #E3C181;
+  border-radius: 10px;
+}
+
+.intro-text-no-form {
+  padding: 25px;
+}
+
+.view-header {
+  margin-bottom: 25px;
+}
+
+.views-field-TN-Image {
+  height: 175px !important;
+  overflow: hidden;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+.thumbnail {
+  padding: 0px;
+  border-color: #FFF;
+}
+
+.collection-tile  {
+  background-color: #FAE6C1;
+  margin: 0;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  padding: 14px;
+  line-height: 1.25;
+  height: 73px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.collection-tile a, .collection-tile a:link, .collection-tile a:visited, .collection-tile a:hover, .collection-tile a:active {
+  color: #9E4024;
+  text-decoration: none;
+}
+
+</style>
+<div class="intro-text intro-text-no-form">
+<h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">' . $collection['banner'] . '</h1><p>' . $collection['abstract'] . '</p>
+</div><h2 style="margin-top: 25px;">Browse by Collection</h2>';
+
+  $handler->display->display_options['header']['area']['format'] = 'php_code';
+  $handler->display->display_options['defaults']['footer'] = FALSE;
+  // Footer: Global: Text area
+  $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
+  $handler->display->display_options['footer']['area_1']['table'] = 'views';
+  $handler->display->display_options['footer']['area_1']['field'] = 'area';
+  $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
+  $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  // Field: Islandora Solr: PID
+  $handler->display->display_options['fields']['PID']['id'] = 'PID';
+  $handler->display->display_options['fields']['PID']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['PID']['field'] = 'PID';
+  $handler->display->display_options['fields']['PID']['label'] = '';
+  $handler->display->display_options['fields']['PID']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+  // Field: Islandora Solr: fgs_label_s
+  $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+  $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: TN Image
+  $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['label'] = '';
+  $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
+  $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+  $handler->display->display_options['defaults']['sorts'] = FALSE;
+  // Sort criterion: Islandora Solr: dg_primarySort_s
+  $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
+  $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
+  // Sort criterion: Islandora Solr: fgs_label_s
+  $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
+  $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
+  // Sort criterion: Islandora Solr: PID
+  $handler->display->display_options['sorts']['PID']['id'] = 'PID';
+  $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
+  $handler->display->display_options['sorts']['PID']['field'] = 'PID';
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $collection['pid'];
+  $handler->display->display_options['path'] = 'islandora/object/' . $collection['pid'];
+
+  return;
+}
+
+*/
+
+/**
  * Implements hook_views_default_views_alter().
  *
  * This hook implementation technique lifted from https://www.drupal.org/docs/7/modules/views/views-howtos/overriding-default-views-in-code on 10-August-2017.
@@ -38,6 +224,14 @@ define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollectio
 function dg7_views_default_views_alter(&$views) {
   // drupal_set_message('dg7_views_default_views_alter has been called but it is currently disabled.', 'info');
   // return;
+
+  // Default collection view display parts...
+  $pid_rewrite = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+
+  /* The following collections have their own landing pages (they do not use the default).
+  $collections = array();
+  $collections['islandora:root'] = array( 'pid':'islandora:root', 'title':'Collection Page - Root', 'id':'collection_page_root', 'description':'root collection', 'banner':'Welcome to Digital Grinnell', 'abstract':'Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.');
+  */
 
   // Alter only the 'collection' view.
   if (array_key_exists('collection', $views)) {
@@ -82,14 +276,14 @@ function dg7_views_default_views_alter(&$views) {
     $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
     $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
-    /* Field: Islandora Solr: fgs_label_ms */
-    $handler->display->display_options['fields']['fgs_label_ms']['id'] = 'fgs_label_ms';
-    $handler->display->display_options['fields']['fgs_label_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_ms']['field'] = 'fgs_label_ms';
-    $handler->display->display_options['fields']['fgs_label_ms']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_ms']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_ms']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_ms']['link_to_object'] = 0;
+    /* Field: Islandora Solr: fgs_label_s */
+    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
     /* Field: Islandora Solr: mods_abstract_ms */
     $handler->display->display_options['fields']['mods_abstract_ms']['id'] = 'mods_abstract_ms';
     $handler->display->display_options['fields']['mods_abstract_ms']['table'] = 'islandora_solr';
@@ -119,18 +313,20 @@ function dg7_views_default_views_alter(&$views) {
     $handler->display->display_options['fields']['PID']['field'] = 'PID';
     $handler->display->display_options['fields']['PID']['label'] = '';
     $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_ms]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_ms]">[fgs_label_ms]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />    ';
+    $handler->display->display_options['fields']['PID']['alter']['text'] = $pid_rewrite;
     $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+
+    // Sort criterion has been commented out to let the Solr query determine the order.
+    /* Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    /* Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    /* Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
@@ -296,21 +492,24 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+
+    /* Sort criterion has been commented out...let the Solr query determine the order.
     $handler->display->display_options['defaults']['sorts'] = FALSE;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    // Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    // Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    // Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
+
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
@@ -478,21 +677,24 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+
+    /* Sort criterion has been commented out...let the Solr query determine the order.
     $handler->display->display_options['defaults']['sorts'] = FALSE;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    // Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    // Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    // Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
+
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
@@ -503,7 +705,6 @@ jQuery( window ).resize(function() {
 
 
 
-    /* Display: Collection Page - Special Collections ----------------------------------------------------------------*/
     /* Display: Collection Page - Scholarship ------------------------------------------------------------------------*/
     $handler = $view->new_display('page', 'Collection Page - Scholarship', 'collection_page_scholarship');
     $handler->display->display_options['display_description'] = 'This is a new page view specifically for the Scholarship collection and its immediate subordinates.';
@@ -662,21 +863,24 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+
+    /* Sort criterion has been commented out...let the Solr query determine the order.
     $handler->display->display_options['defaults']['sorts'] = FALSE;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    // Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    // Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    // Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
+
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
@@ -845,21 +1049,24 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
+
+    /* Sort criterion has been commented out...let the Solr query determine the order.
     $handler->display->display_options['defaults']['sorts'] = FALSE;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+    // Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    // Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    // Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
+
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
@@ -1029,20 +1236,23 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
     $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
     $handler->display->display_options['defaults']['sorts'] = FALSE;
-    /* Sort criterion: Islandora Solr: dg_primarySort_s */
+
+    /* Sort criterion has been commented out...let the Solr query determine the order.
+    // Sort criterion: Islandora Solr: dg_primarySort_s
     $handler->display->display_options['sorts']['dg_primarySort_s']['id'] = 'dg_primarySort_s';
     $handler->display->display_options['sorts']['dg_primarySort_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['dg_primarySort_s']['field'] = 'dg_primarySort_s';
-    /* Sort criterion: Islandora Solr: fgs_label_s */
+    // Sort criterion: Islandora Solr: fgs_label_s
     $handler->display->display_options['sorts']['fgs_label_s']['id'] = 'fgs_label_s';
     $handler->display->display_options['sorts']['fgs_label_s']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['fgs_label_s']['field'] = 'fgs_label_s';
-    /* Sort criterion: Islandora Solr: PID */
+    // Sort criterion: Islandora Solr: PID
     $handler->display->display_options['sorts']['PID']['id'] = 'PID';
     $handler->display->display_options['sorts']['PID']['table'] = 'islandora_solr';
     $handler->display->display_options['sorts']['PID']['field'] = 'PID';
     $handler->display->display_options['defaults']['filter_groups'] = FALSE;
     $handler->display->display_options['defaults']['filters'] = FALSE;
+
     /* Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s */
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
     $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
@@ -1059,15 +1269,15 @@ jQuery( window ).resize(function() {
     $handler->display->display_options['display_description'] = 'This block definition overriddes previous versions.';
     $handler->display->display_options['defaults']['arguments'] = FALSE;
     /* Contextual filter: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms */
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_action'] = 'not found';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['default_argument_type'] = 'fixed';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['number_of_records'] = '0';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary']['format'] = 'default_summary';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_ms']['summary_options']['items_per_page'] = '25';
-    $handler->display->display_options['block_description'] = 'Simple Object List (Not for Collections)';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['default_action'] = 'not found';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['default_argument_type'] = 'fixed';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary']['number_of_records'] = '0';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary']['format'] = 'default_summary';
+    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary_options']['items_per_page'] = '25';
+    $handler->display->display_options['block_description'] = 'Simple Object List (Default Collection View)';
 
 
     // Override the existing view with this new definition.
@@ -1270,7 +1480,7 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
 
     // islandora_solr_advanced_search_form.
     case 'islandora_solr_advanced_search_form':
-      dg7_islandora_solr_advanced_search_form_alter_helper($form);
+      // dg7_islandora_solr_advanced_search_form_alter_helper($form);
       break;
   }
 
@@ -1284,7 +1494,7 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
  *
  * @param $form
  *   The target form array.
- */
+ *
 function dg7_islandora_solr_advanced_search_form_alter_helper(&$form) {
   module_load_include('inc', 'islandora_solr_collection_search', 'islandora_solr_collection_search');
 
@@ -1487,6 +1697,14 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
   switch ($collection) {
 
+    // Sort by date then hidden_creators
+
+    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
+      $isq->solrParams['sort'] .= ', dg_hidden_creators_s asc';
+      break;
+
+
     // Sort by date then label.
 
     case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
@@ -1497,13 +1715,6 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:geology':              // Geology (Fossils) Collection
     case 'grinnell:physics-museum':       // Physics Museum
     case 'grinnell:grinnell-in-china':    // Grinnell In China
-    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
-      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
-      $isq->solrParams['sort'] .= ', fgs_label_s asc';
-      break;
-
-    // Special sort by date required for Ancient Coins due to mixed BC and AD dates.
-
     case 'grinnell:ancient-coins':        // Ancient Coins
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
