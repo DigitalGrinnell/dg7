@@ -28,9 +28,87 @@ define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollectio
  */
 
 /**
- *  Handler code for hook_view_default_views_alter (below).
+ *  Handler code for collection 'list' views in hook_view_default_views_alter (below).
  */
-function view_handler( $pid, $collection, &$view ) {
+function list_view_handler( $pid, $collection, &$view ) {
+
+  $handler = $view->new_display('page', $collection['title'], $pid);
+  $handler->display->display_options['defaults']['header'] = FALSE;
+  $handler->display->display_options['style_plugin'] = 'default';
+  $handler->display->display_options['row_plugin'] = 'fields';
+  // Header: Global: Text area
+  $handler->display->display_options['header']['area']['id'] = 'area';
+  $handler->display->display_options['header']['area']['table'] = 'views';
+  $handler->display->display_options['header']['area']['field'] = 'area';
+  $handler->display->display_options['header']['area']['empty'] = TRUE;
+  $handler->display->display_options['header']['area']['content'] = '<div class="intro-text intro-text-no-form">
+<h1 style="text-align:center; margin-top:0px; margin-bottom:20px;">'. $collection['label'] . '</h1><p>' . $collection['abstract'] . '</p></div>';
+  $handler->display->display_options['header']['area']['format'] = 'php_code';
+  $handler->display->display_options['defaults']['fields'] = FALSE;
+  // Field: Islandora Solr: dg_creators_s
+  $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
+  $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
+  $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
+  $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: fgs_label_s
+  $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+  $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_abstract_ms
+  $handler->display->display_options['fields']['mods_abstract_ms']['id'] = 'mods_abstract_ms';
+  $handler->display->display_options['fields']['mods_abstract_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_abstract_ms']['field'] = 'mods_abstract_ms';
+  $handler->display->display_options['fields']['mods_abstract_ms']['label'] = '';
+  $handler->display->display_options['fields']['mods_abstract_ms']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_abstract_ms']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_abstract_ms']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_extension_pull_quote_ms
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['id'] = 'mods_extension_pull_quote_ms';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['field'] = 'mods_extension_pull_quote_ms';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['label'] = '';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['link_to_object'] = 0;
+  // Field: Islandora Solr: TN Image
+  $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['label'] = '';
+  $handler->display->display_options['fields']['TN Image']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
+  // Field: Islandora Solr: PID
+  $handler->display->display_options['fields']['PID']['id'] = 'PID';
+  $handler->display->display_options['fields']['PID']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['PID']['field'] = 'PID';
+  $handler->display->display_options['fields']['PID']['label'] = '';
+  $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+  $handler->display->display_options['defaults']['filter_groups'] = FALSE;
+  $handler->display->display_options['defaults']['filters'] = FALSE;
+  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $pid;
+  $handler->display->display_options['path'] = 'islandora/object/' .$pid;
+
+  return $view;
+}
+
+/**
+ *  Handler code for collection 'grid' views in hook_view_default_views_alter (below).
+ */
+function grid_view_handler( $pid, $collection, &$view ) {
 
   $handler = $view->new_display('page', $collection['title'], $collection['id']);
   $handler->display->display_options['display_description'] = "This is a new page view specifically for the " . $collection['description'] . " and its immediate subordinates.";
@@ -154,9 +232,6 @@ function dg7_views_default_views_alter(&$views) {
   // drupal_set_message('dg7_views_default_views_alter has been called but it is currently disabled.', 'info');
   // return;
 
-  // Default collection view (list of objects, not thumbnails) display parts...
-  $pid_rewrite = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
-
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
   $collections = dg7_collections_list();
@@ -251,27 +326,12 @@ function dg7_views_default_views_alter(&$views) {
 
     // Loop through the defined collection landing pages ----------------------------------------------------- !!!!
     foreach ($collections as $pid => $collection) {
-      if (isset($collection['banner'])) { $view = view_handler($pid, $collection, $view); }
+      if (isset($collection['banner'])) {
+        $view = grid_view_handler($pid, $collection, $view);
+      } else {
+        $view = list_view_handler($pid, $collection, $view);
+      }
     }
-
-    // Display: Simple Object List (Default View) ---------------------------------------------------------- !!!!
-    $handler = $view->new_display('block', 'Simple Object List (Default View)', 'block');
-    $handler->display->display_options['display_description'] = 'This block definition overriddes previous versions.';
-    $handler->display->display_options['defaults']['arguments'] = FALSE;
-    // Contextual filter: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['default_action'] = 'not found';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['default_argument_type'] = 'fixed';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary']['number_of_records'] = '0';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary']['format'] = 'default_summary';
-    $handler->display->display_options['arguments']['RELS_EXT_isMemberOfCollection_uri_s']['summary_options']['items_per_page'] = '25';
-    $handler->display->display_options['block_description'] = 'Simple Object List (Default Collection View)';
-    $handler->display->display_options['header']['area']['format'] = 'php_code';
-    $handler->display->display_options['header']['area']['content'] = '<div class="intro-text intro-text-no-form">
-<h1 style="text-align:center; margin-top:0px; margin-bottom:20px;">' . 'This is a test.  Replace with collection[banner]' . '</h1>
-<p>' . 'This is a test.  Replace with collection[abstract]' . '</p></div>';
 
     // Override the existing view with this new definition.
     $views['collection'] = $view;
@@ -900,8 +960,13 @@ function dg7_collections_list( ) {
     $objects = $response['objects'];
     foreach ($objects as $obj) {
       $pid = $obj['PID'];
-      $collections[$pid] = array( 'label' => $obj['object_label'], 'abstract' => $obj['solr_doc']['dc.description'][0],
-        'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
+      $collections[$pid] = array( 'label' => $obj['object_label'], 'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
+      if (isset($obj['solr_doc']['dc.description'])) {
+        $collections[$pid] ['abstract'] = $obj['solr_doc']['dc.description'][0];
+      } else {
+        $msg = "Collection $pid has no dc.description in " . __FUNCTION__ . ".";
+        drupal_set_message($msg, 'warning');
+      }
       $collections[$pid]['id'] = "collection_" . $pid;
       $collections[$pid]['title'] = "collection_" . $pid;
       $collections[$pid]['description'] = "collection_" . $pid;
