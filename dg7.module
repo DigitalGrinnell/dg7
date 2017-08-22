@@ -42,9 +42,15 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<div class="intro-text intro-text-no-form">
-<h1 style="text-align:center; margin-top:0px; margin-bottom:20px;">'. $collection['label'] . '</h1><p>' . $collection['abstract'] . '</p></div>';
+<h1 style="text-align: center; margin-top: 0px; margin-bottom: 20px">'. $collection['label'] . '</h1><p>' . $collection['abstract'] . '</p></div>';
   $handler->display->display_options['header']['area']['format'] = 'php_code';
   $handler->display->display_options['defaults']['fields'] = FALSE;
+  // No results behavior: Global: Text area
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'This collection contains no visible items at this time.  Our collection visibility sometimes changes with time so please check back here at a later date.  If you feel that this message is incorrect please use the "Report a Problem" link at the bottom of the page to let us know.  Thank you.';
   // Field: Islandora Solr: dg_creators_s
   $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
   $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
@@ -90,7 +96,7 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['fields']['PID']['field'] = 'PID';
   $handler->display->display_options['fields']['PID']['label'] = '';
   $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><h3><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></h3></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div></div><hr />';
   $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
@@ -100,7 +106,7 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
   $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
   $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $pid;
-  $handler->display->display_options['path'] = 'islandora/object/' .$pid;
+  $handler->display->display_options['path'] = 'islandora/object/' . $pid;
 
   return $view;
 }
@@ -109,6 +115,10 @@ function list_view_handler( $pid, $collection, &$view ) {
  *  Handler code for collection 'grid' views in hook_view_default_views_alter (below).
  */
 function grid_view_handler( $pid, $collection, &$view ) {
+
+  if (!isset($collection['title'])) { drupal_set_message("Collection title is missing for $pid", 'warning'); }
+  if (!isset($collection['id'])) { drupal_set_message("Collection ID (id) is missing for $pid", 'warning'); }
+  if (!isset($collection['description'])) { drupal_set_message("Collection description is missing for $pid", 'warning'); }
 
   $handler = $view->new_display('page', $collection['title'], $collection['id']);
   $handler->display->display_options['display_description'] = "This is a new page view specifically for the " . $collection['description'] . " and its immediate subordinates.";
@@ -173,12 +183,6 @@ jQuery( window ).resize(function() {
 
   $handler->display->display_options['header']['area']['format'] = 'php_code';
   $handler->display->display_options['defaults']['footer'] = FALSE;
-  // Footer: Global: Text area
-  $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
-  $handler->display->display_options['footer']['area_1']['table'] = 'views';
-  $handler->display->display_options['footer']['area_1']['field'] = 'area';
-  $handler->display->display_options['footer']['area_1']['content'] = '<div class="device-md hidden-lg"></div><div class="device-lg hidden-md"></div>';
-  $handler->display->display_options['footer']['area_1']['format'] = 'php_code';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   // Field: Islandora Solr: PID
   $handler->display->display_options['fields']['PID']['id'] = 'PID';
@@ -202,7 +206,7 @@ jQuery( window ).resize(function() {
   $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
   $handler->display->display_options['fields']['TN Image']['label'] = '';
   $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
+  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a class="collection-tile-text" href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
   $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
@@ -236,105 +240,150 @@ function dg7_views_default_views_alter(&$views) {
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
   $collections = dg7_collections_list();
   $collections['islandora:root']['banner'] = 'Welcome to Digital Grinnell';
-  $collections['islandora:root']['abstract'] = "Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.";
   $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
   $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
   $collections['grinnell:campus-collections']['banner'] = "Grinnell College Campus Collection";
 
-  // Alter only the 'collection' view.
-  if (array_key_exists('collection', $views)) {
-    // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'Collection' view.", 'info'); }
+  // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'dg7_Collection' view.", 'info'); }
 
-    // The definition from the exported view goes here.
-    $view = new view();
-    $view->name = 'collection';
-    $view->description = 'This is a set of views pages that make up most of DG\'s display.  This view IS OVERRIDEN in dg7.module code!';
-    $view->tag = 'default';
-    $view->base_table = 'islandora_solr';
-    $view->human_name = 'Collection';
-    $view->core = 7;
-    $view->api_version = '3.0';
-    $view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+  // The definition from the exported view goes here.
+  $view = new view();
+  $view->name = 'dg7_collection';
+  $view->description = 'This is a set of views pages that make up most of DG\'s display.  This view IS OVERRIDEN in dg7.module code!';
+  $view->tag = 'default';
+  $view->base_table = 'islandora_solr';
+  $view->human_name = 'dg7_Collection';
+  $view->core = 7;
+  $view->api_version = '3.0';
+  $view->disabled = FALSE; /* Edit to true to make a default view disabled initially */
 
-    // Display: Master
-    $handler = $view->new_display('default', 'Master', 'default');
-    $handler->display->display_options['title'] = '<none>';
-    $handler->display->display_options['use_more_always'] = FALSE;
-    $handler->display->display_options['access']['type'] = 'none';
-    $handler->display->display_options['cache']['type'] = 'none';
-    $handler->display->display_options['query']['type'] = 'views_query';
-    $handler->display->display_options['exposed_form']['type'] = 'basic';
-    $handler->display->display_options['pager']['type'] = 'full';
-    $handler->display->display_options['pager']['options']['items_per_page'] = '20';
-    $handler->display->display_options['pager']['options']['offset'] = '0';
-    $handler->display->display_options['pager']['options']['id'] = '0';
-    $handler->display->display_options['pager']['options']['quantity'] = '9';
-    $handler->display->display_options['style_plugin'] = 'default';
-    $handler->display->display_options['row_plugin'] = 'fields';
-    // Footer: Global: Text area
-    $handler->display->display_options['footer']['area_1']['id'] = 'area_1';
-    $handler->display->display_options['footer']['area_1']['table'] = 'views';
-    $handler->display->display_options['footer']['area_1']['field'] = 'area';
-    // Field: Islandora Solr: dg_creators_s
-    $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
-    $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
-    $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
-    $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
-    // Field: Islandora Solr: fgs_label_s
-    $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
-    $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
-    $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
-    // Field: Islandora Solr: mods_abstract_ms
-    $handler->display->display_options['fields']['mods_abstract_ms']['id'] = 'mods_abstract_ms';
-    $handler->display->display_options['fields']['mods_abstract_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['mods_abstract_ms']['field'] = 'mods_abstract_ms';
-    $handler->display->display_options['fields']['mods_abstract_ms']['label'] = '';
-    $handler->display->display_options['fields']['mods_abstract_ms']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['mods_abstract_ms']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['mods_abstract_ms']['link_to_object'] = 0;
-    // Field: Islandora Solr: mods_extension_pull_quote_ms
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['id'] = 'mods_extension_pull_quote_ms';
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['field'] = 'mods_extension_pull_quote_ms';
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['label'] = '';
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['link_to_object'] = 0;
-    // Field: Islandora Solr: TN Image
-    $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
-    $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
-    $handler->display->display_options['fields']['TN Image']['label'] = '';
-    $handler->display->display_options['fields']['TN Image']['exclude'] = TRUE;
-    $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
-    // Field: Islandora Solr: PID
-    $handler->display->display_options['fields']['PID']['id'] = 'PID';
-    $handler->display->display_options['fields']['PID']['table'] = 'islandora_solr';
-    $handler->display->display_options['fields']['PID']['field'] = 'PID';
-    $handler->display->display_options['fields']['PID']['label'] = '';
-    $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-    $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
-    $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
-    $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
+  // Display: Master
+  $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['title'] = '<none>';
+  $handler->display->display_options['use_more_always'] = FALSE;
+  $handler->display->display_options['access']['type'] = 'none';
+  $handler->display->display_options['cache']['type'] = 'none';
+  $handler->display->display_options['query']['type'] = 'views_query';
+  $handler->display->display_options['exposed_form']['type'] = 'basic';
+  $handler->display->display_options['pager']['type'] = 'full';
+  $handler->display->display_options['pager']['options']['items_per_page'] = '20';
+  $handler->display->display_options['pager']['options']['offset'] = '0';
+  $handler->display->display_options['pager']['options']['id'] = '0';
+  $handler->display->display_options['pager']['options']['quantity'] = '9';
+  $handler->display->display_options['style_plugin'] = 'default';
+  $handler->display->display_options['row_plugin'] = 'fields';
+  // No results behavior: Global: Text area
+  $handler->display->display_options['empty']['area']['id'] = 'area';
+  $handler->display->display_options['empty']['area']['table'] = 'views';
+  $handler->display->display_options['empty']['area']['field'] = 'area';
+  $handler->display->display_options['empty']['area']['empty'] = TRUE;
+  $handler->display->display_options['empty']['area']['content'] = 'This collection contains no visible items at this time.  Our collection visibility sometimes changes with time so please check back here at a later date.  If you feel that this message is incorrect please use the "Report a Problem" link at the bottom of the page to let us know.  Thank you.';
+  // Field: Islandora Solr: dg_creators_s
+  $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
+  $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
+  $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
+  $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: fgs_label_s
+  $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['fgs_label_s']['field'] = 'fgs_label_s';
+  $handler->display->display_options['fields']['fgs_label_s']['label'] = '';
+  $handler->display->display_options['fields']['fgs_label_s']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['fgs_label_s']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['fgs_label_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_abstract_ms
+  $handler->display->display_options['fields']['mods_abstract_ms']['id'] = 'mods_abstract_ms';
+  $handler->display->display_options['fields']['mods_abstract_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_abstract_ms']['field'] = 'mods_abstract_ms';
+  $handler->display->display_options['fields']['mods_abstract_ms']['label'] = '';
+  $handler->display->display_options['fields']['mods_abstract_ms']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_abstract_ms']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_abstract_ms']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_extension_pull_quote_ms
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['id'] = 'mods_extension_pull_quote_ms';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['field'] = 'mods_extension_pull_quote_ms';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['label'] = '';
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_extension_pull_quote_ms']['link_to_object'] = 0;
+  // Field: Islandora Solr: TN Image
+  $handler->display->display_options['fields']['TN Image']['id'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
+  $handler->display->display_options['fields']['TN Image']['label'] = '';
+  $handler->display->display_options['fields']['TN Image']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
+  // Field: Islandora Solr: PID
+  $handler->display->display_options['fields']['PID']['id'] = 'PID';
+  $handler->display->display_options['fields']['PID']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['PID']['field'] = 'PID';
+  $handler->display->display_options['fields']['PID']['label'] = '';
+  $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
 
-    // Loop through the defined collection landing pages ----------------------------------------------------- !!!!
-    foreach ($collections as $pid => $collection) {
-      if (isset($collection['banner'])) {
-        $view = grid_view_handler($pid, $collection, $view);
+  // Loop through the defined collection landing pages ----------------------------------------------------- !!!!
+  foreach ($collections as $pid => $collection) {
+    if (isset($collection['banner'])) {
+      $view = grid_view_handler($pid, $collection, $view);
+    } else {
+      $view = list_view_handler($pid, $collection, $view);
+    }
+  }
+
+  // Override the existing view with this new definition.
+  $views['dg7_collection'] = $view;
+}
+
+/**
+ * Build and execute Apache Solr query to fetch all collection CModel objects.
+ *
+ * Returns an associative array for all collectionCModel objects as:
+ *   $collections[pid] with keys 'label', 'abstract', 'path' and 'thumbnail'
+ *
+ * Note that collection objects which are 'dark', aka hidden from public view, will NOT be
+ * returned by this query!
+ *
+ */
+function dg7_collections_list( ) {
+
+  $solr = new IslandoraSolrQueryProcessor( );
+  $query = "RELS_EXT_hasModel_uri_s:info\:fedora/islandora\:collectionCModel";
+  $solr->buildQuery($query);
+  $solr->solrLimit = "99";  // must be greater than total number of collections AND it must be set between buildQuery and executeQuery!
+  $solr->executeQuery(FALSE);
+  $response = $solr->islandoraSolrResult['response'];
+  $numFound = $response['numFound'];
+
+  if ($numFound < 1) {
+    return "Error searching Solr index in " . __FUNCTION__ . ".";
+
+  } else {
+    $collections = array( );
+    $objects = $response['objects'];
+    foreach ($objects as $obj) {
+      $pid = $obj['PID'];
+      $collections[$pid] = array( 'label' => $obj['object_label'], 'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
+      if (isset($obj['solr_doc']['dc.description'])) {
+        $collections[$pid] ['abstract'] = $obj['solr_doc']['dc.description'][0];
       } else {
-        $view = list_view_handler($pid, $collection, $view);
+        $msg = "Collection $pid has no dc.description in " . __FUNCTION__ . ".";
+        drupal_set_message($msg, 'warning');
       }
+      $collections[$pid]['id'] = "display_" . $pid;
+      $collections[$pid]['title'] = "display_" . $pid;
+      $collections[$pid]['description'] = "display_" . $pid;
     }
 
-    // Override the existing view with this new definition.
-    $views['collection'] = $view;
+    // Make sure we have a $collections[] entry for islandora:root!
+    $collections['islandora:root'] = array( 'id' => 'display_islandora:root', 'title' => 'display_islandora:root', 'description' => 'display_islandora:root', 'label' => 'Welcome to Digital Grinnell', 'path' => 'islandora/object', 'abstract' => 'Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.' );
+
+    return $collections;
   }
 }
 
@@ -752,7 +801,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     // Sort by date then hidden_creators
 
-    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
+    case 'grinnell:alumni-oral-histories':  // Alumni Oral Histories
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', dg_hidden_creators_s asc';
       break;
@@ -819,18 +868,17 @@ function dg7_views_api( ) {
  * a copy found in this module's "templates" folder.  Pulled (and corrected) from
  * http://www.midwesternmac.com/blogs/jeff-geerling/overriding-template-file
  *
- */
+ *
 function dg7_theme_registry_alter(&$theme_registry) {
   // Override the default islandora-solr-teaser.tpl.php with our own.
-  if (isset($theme_registry['islandora_solr_teaser'])) {
-    $module_path = drupal_get_path('module', 'dg7');
+  if (isset($theme_registry['islandora_solr_teaser'])) { $module_path = drupal_get_path('module', 'dg7');
     // $theme_registry['islandora_solr_teaser']['theme path'] = $module_path;
     $theme_registry['islandora_solr_teaser']['path'] = $module_path;
     // $theme_registry['islandora_solr_teaser']['template'] = $module_path . '/templates/islandora-solr-teaser';
     $theme_registry['islandora_solr_teaser']['template'] = 'templates/islandora-solr-teaser';
   }
   return;
-}
+} */
 
 /**
  * No longer needed as of 9-August-2017!  We now use hook_islandora_solr_query_alter instead.
@@ -903,7 +951,7 @@ function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL)
 
 /**
  * Implements hook_preprocess_THEME().
- */
+ *
 function dg7_preprocess_islandora_solr_teaser(&$variables) {
 
   // Add a creators_statement to be displayed.
@@ -917,7 +965,7 @@ function dg7_preprocess_islandora_solr_teaser(&$variables) {
   }
 
   return;
-}
+} */
 
 /**
  * Implementation of hook_form_FORM_ID_alter().
@@ -937,43 +985,6 @@ $results = $tuque->repository->ri->sparqlQuery($query);
 return $results;
 }
 
-
-/**
- * Build and execute Apache Solr query to fetch all collection CModel objects.
- *
- * Returns an associative array for all collectionCModel objects as:
- *   $collections[pid] with keys 'label', 'abstract', 'path' and 'thumbnail'
- *
- */
-function dg7_collections_list( ) {
-
-  $solr = new IslandoraSolrQueryProcessor( );
-  $query = "RELS_EXT_hasModel_uri_s:info\:fedora/islandora\:collectionCModel";
-  $solr->buildQuery($query);
-  $solr->solrLimit = "99";  // must be greater than total number of collections AND it must be set between buildQuery and executeQuery!
-  $solr->executeQuery(FALSE);
-  $response = $solr->islandoraSolrResult['response'];
-  $numFound = $response['numFound'];
-  if ($numFound < 1) {
-    return "Error searching Solr index in " . __FUNCTION__ . ".";
-  } else {
-    $objects = $response['objects'];
-    foreach ($objects as $obj) {
-      $pid = $obj['PID'];
-      $collections[$pid] = array( 'label' => $obj['object_label'], 'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
-      if (isset($obj['solr_doc']['dc.description'])) {
-        $collections[$pid] ['abstract'] = $obj['solr_doc']['dc.description'][0];
-      } else {
-        $msg = "Collection $pid has no dc.description in " . __FUNCTION__ . ".";
-        drupal_set_message($msg, 'warning');
-      }
-      $collections[$pid]['id'] = "collection_" . $pid;
-      $collections[$pid]['title'] = "collection_" . $pid;
-      $collections[$pid]['description'] = "collection_" . $pid;
-    }
-    return $collections;
-  }
-}
 
 /*
 global $user;
