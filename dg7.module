@@ -499,52 +499,6 @@ function dg7_preprocess(&$variables, $hook) {
 
 
 /**
- * Implements hook_islandora_solr_query_result( ).
- *
- * @param array $result
- *
- * @TODO...This doesn't work due to paging!
- *
-function dg7_islandora_solr_query_result(array $result) {
-
-// Look in reverse for any response docs where...
-// $result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] = info:fedora/islandora:collectionCModel
-
-// If one is found, pop it to the top of the list and continue.
-
-$i = count($result['response']['docs']);
-while ($i) {
-if ($collection = (isset($result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s']) ?
-$result['response']['docs'][$i]['RELS_EXT_hasModel_uri_s'] : FALSE) === 'info:fedora/islandora:collectionCModel') {
-_move_to_top($result['response']['docs'], $i);
-}
-$i--;
-}
-return;
-}
-
-/**
- * Helper functions for above.
- *
- * @param $array
- * @param $key
- *
-function _move_to_top(&$array, $key) {
-$temp = array($key => $array[$key]);
-unset($array[$key]);
-$array = $temp + $array;
-}
-
-function _move_to_bottom(&$array, $key) {
-$value = $array[$key];
-unset($array[$key]);
-$array[$key] = $value;
-}
-
- */
-
-
-/**
  * Implements hook_form_alter.
  *
  * This function implements hook_form_alter with intent to change the behavior
@@ -561,7 +515,7 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
   switch($form_id) {
 
     // User login form
-    case 'user_login_block':    // MAM...20-Jan-2016... Do NOT block the user/login page!
+    case 'user_login_block':          // MAM...20-Jan-2016... Do NOT block the user/login page!
       $form['name']['#weight'] = 1;
       $form['pass']['#weight'] = 2;
 
@@ -882,90 +836,9 @@ function dg7_theme_registry_alter(&$theme_registry) {
 
 /**
  * No longer needed as of 9-August-2017!  We now use hook_islandora_solr_query_alter instead.
- *
  * Implements hook_islandora_solr_views_query_alter.
- *
  * This CUSTOM hook is called from execute() in ..islandora_solr_views/islandora_solr_views_query.inc
- *
- * @param $view
- * @param null $viewName
- * @param null $cID
- *
- *
-function dg7_islandora_solr_views_query_alter(&$view, $viewName=NULL, $cID=NULL) {
-
-  // dsm($view);
-
-  // Not a 'collection' view or we didn't find a collection ID?  We're done.
-  if ($viewName != 'collection' || !$cID) { return; }
-  $id = str_ireplace('\\', '', $cID);
-
-  $view->orderby = array( );
-  $view->orderby['dg_primarySort_s'] = 'asc';  // everything sorts by dg_primarySort_s first!
-
-  switch ($id) {
-
-    // Sort by date then label.
-
-    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':      // The Early College History collection
-    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
-    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
-    case 'grinnell:postcards':            // Historic Iowa Postcards
-    case 'grinnell:ancient-coins':        // Ancient Coins
-    case 'grinnell:geology':              // Geology (Fossils) Collection
-    case 'grinnell:physics-museum':       // Physics Museum
-    case 'grinnell:grinnell-in-china':    // Grinnell In China
-    case 'grinnell:alumnioralhistories':  // Alumni Oral Histories
-      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
-      $view->orderby['fgs_label_s'] = 'asc';
-      break;
-
-    // Sort by creators(s), then date, then label.
-
-    case 'grinnell:gic':                    // The Grinnell In China collection
-    case 'grinnell:faculty-scholarship':    // The Faculty Scholarship collection
-    case 'grinnell:student-scholarship':    // The Student Scholarship collection
-    case 'grinnell:curricular-materials':   // The Syllabi and Curricular Materials collection
-    case 'grinnell:faulconer':              // The Faulconer Art collection
-    case 'grinnell:soviet-graphic-art':     // The Faulconer's Soviet Graphic Art sub-collection
-    case 'grinnell:faulconer-suppressed':
-    case 'grinnell:studio-student-art':      // Studio Student Art sub-collection
-      $view->orderby['dg_creators_s'] = 'asc';
-      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
-      $view->orderby['fgs_label_s'] = 'asc';
-      break;
-
-    // Sort by label then date.
-
-    default:   // Not entering a specialized collection.
-      $view->orderby['fgs_label_s'] = 'asc';
-      $view->orderby['mods_originInfo_dateCreated_sort'] = 'asc';
-      break;
-  }
-
-  return;
-}
-
-*/
-
-/**
- * Implements hook_preprocess_THEME().
- *
-function dg7_preprocess_islandora_solr_teaser(&$variables) {
-
-  // Add a creators_statement to be displayed.
-
-  if (isset($variables['values']['dc.creator'])) {
-    $val = '';
-    foreach ($variables['values']['dc.creator'] as $creator) {
-      $val .= $creator."; ";
-    }
-    $variables['values']['creators_statement'] = trim($val,'; ');
-  }
-
-  return;
-} */
+ */
 
 /**
  * Implementation of hook_form_FORM_ID_alter().
@@ -985,8 +858,6 @@ $results = $tuque->repository->ri->sparqlQuery($query);
 return $results;
 }
 
-
-/*
 global $user;
 
 // Fetch some pertinent user data.
@@ -1043,50 +914,6 @@ OPTIONAL {{?object <info:fedora/fedora-system:def/relations-external#isConstitue
 FILTER(regex(str(?object), "info:fedora/grinnell:")) FILTER(sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOfCollection>) || sameTerm(?collection_predicate, <fedora-rels-ext:isMemberOf>)) FILTER(!bound(?compound)) FILTER((!bound(?role) && !bound(?user)) || (bound(?user) && ?user='anonymous') || (bound(?role) && (?role='anonymous user')))
 }ORDER BY ?title
  */
-
-/**
- * Implementation of hook_help().
- *
-function dg7_help($path, $arg) {
-switch ($path) {
-case 'admin/modules#description':
-return t('This module provides functions specifically written for Digital7.Grinnell.edu.' );
-case 'admin/help#dg7':
-$txt  = '<h3>Description:</h3><p>This module provides functions specifically written for Digital7.Grinnell.edu.</p>';
-return t( $txt );
-}
-}
-
-/**
- * Implementation of hook_perm().
- *
-function dg7_perm( ) {
-return array(
-'administer dg7',
-'create dg7',
-'delete dg7',
-'delete dg7',
-'edit dg7',
-'edit own dg7'
-);
-}
-
-/**
- * Implementation of hook_access().
- *
-function dg7_access($op, $node, $account) {
-switch ($op) {
-case 'create':
-return user_access('create dg7', $account);
-break;
-case 'update':
-return user_access('edit dg7', $account) || (user_access('edit own dg7', $account) && ($account->uid == $node->uid));
-break;
-case 'delete':
-return user_access('delete dg7', $account) || (user_access('delete own dg7', $account) && ($account->uid == $node->uid));
-break;
-}
-}
 
 /**
  * Implementation of hook_init( ).
@@ -1298,9 +1125,16 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
 
   if (!file_exists($coverFile)) {
 
+    // Examine the object pid and implement a namespace-specific transform...
+    list($ns, $pidn) = explode(':', $pid);
+
     // Retrieve the cover sheet transform.
     $module_path = drupal_get_path('module', 'dg7');
-    $cs_path = $GLOBALS['base_url'] . "/$module_path/dgCoverSheet.xsl";
+    if ($ns === 'faulconer-art') {
+      $cs_path = $GLOBALS['base_url'] . "/$module_path/faulconerCoverSheet.xsl";
+    } else {
+      $cs_path = $GLOBALS['base_url'] . "/$module_path/grinnellCoverSheet.xsl";
+    }
 
     // First, remove all /mods:relatedItem[@type="admin"] notes from the XML before it is
     // saved.  This data is NEVER to be exposed.
