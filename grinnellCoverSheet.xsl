@@ -97,27 +97,36 @@
           <p class="indented">
             <xsl:choose>
               <xsl:when test="$creators and $creators !=''">
-                <xsl:copy-of select="$creators"/>.
+                <xsl:copy-of select="$creators"/>
+                <xsl:choose>
+                  <xsl:when test="substring($creators,string-length($creators)) != '.'">
+                    <xsl:text>.</xsl:text>
+                  </xsl:when>
+                  <xsl:otherwise/>
+                </xsl:choose>
               </xsl:when>
               <xsl:otherwise/>
             </xsl:choose>
             <xsl:choose>
               <xsl:when test="$created and $created !=''">
                 <xsl:text> </xsl:text>
-                <xsl:copy-of select="$created"/>.
+                <xsl:copy-of select="$created"/>
+                <xsl:text>.</xsl:text>
               </xsl:when>
               <xsl:otherwise/>
             </xsl:choose>
             "<xsl:apply-templates select="/mods:mods/mods:titleInfo[not(@type)]/mods:title"/>".
             <xsl:choose>
               <xsl:when test="$publisher and $publisher != ''">
-                <xsl:copy-of select="$publisher"/>.
+                <xsl:copy-of select="$publisher"/>
+                <xsl:text>.</xsl:text>
               </xsl:when>
               <xsl:otherwise/>
             </xsl:choose>
             <xsl:choose>
               <xsl:when test="$handle and $handle !=''">
-                hdl: <xsl:copy-of select="$handle"/>.
+                hdl: <xsl:copy-of select="$handle"/>
+                <xsl:text>.</xsl:text>
               </xsl:when>
               <xsl:otherwise/>
             </xsl:choose>
@@ -169,12 +178,30 @@
               <p class="indented">
                 <xsl:element name="a">
                   <xsl:attribute name="href">
-                    <xsl:copy-of select="$local"/>
+                    <xsl:choose>
+                      <xsl:when test="substring($local,1,4) = 'http'">
+                        <xsl:copy-of select="$local"/>
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:text>https://digital.grinnell.edu/islandora/object/</xsl:text>
+                        <xsl:copy-of select="$local"/>
+                      </xsl:otherwise>
+                    </xsl:choose>
                   </xsl:attribute>
                   <xsl:attribute name="target">
                     <xsl:text>_blank</xsl:text>
                   </xsl:attribute>
-                  <span><xsl:copy-of select="$local"/></span>
+                  <span>
+                    <xsl:choose>
+                      <xsl:when test="substring($local,1,4) = 'http'">
+                        <xsl:copy-of select="$local"/>
+                      </xsl:when>
+                      <xsl:otherwise>
+                        <xsl:text>https://digital.grinnell.edu/islandora/object/</xsl:text>
+                        <xsl:copy-of select="$local"/>
+                      </xsl:otherwise>
+                    </xsl:choose>
+                  </span>
                 </xsl:element>
               </p>
             </xsl:when>
