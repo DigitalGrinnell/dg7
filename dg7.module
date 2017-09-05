@@ -1120,13 +1120,14 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
   }
 
+  // Examine the object pid and implement a namespace-specific transform...
+  list($ns, $pidn) = explode(':', $pid);
+  $pid = "$ns:$pidn";
+
   // Check for a cover sheet file already in place.  If it is not, create a new one.
   $coverFile = "public://coversheets/$pid.xml";
 
   if (!file_exists($coverFile)) {
-
-    // Examine the object pid and implement a namespace-specific transform...
-    list($ns, $pidn) = explode(':', $pid);
 
     // Retrieve the cover sheet transform.
     $module_path = drupal_get_path('module', 'dg7');
