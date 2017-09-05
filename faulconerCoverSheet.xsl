@@ -15,7 +15,7 @@
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:value-of select="."/>
-					<xsl:text> and </xsl:text>
+					<xsl:text>; </xsl:text>
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:for-each>

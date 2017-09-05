@@ -15,7 +15,7 @@
           </xsl:when>  
           <xsl:otherwise>
             <xsl:value-of select="."/>
-            <xsl:text> and </xsl:text>
+            <xsl:text>; </xsl:text>
           </xsl:otherwise>
         </xsl:choose>
       </xsl:for-each>
@@ -95,7 +95,12 @@
           
           <h2>Citation: </h2>
           <p class="indented">
-            <xsl:copy-of select="$creators"/>
+            <xsl:choose>
+              <xsl:when test="$creators and $creators !=''">
+                <xsl:copy-of select="$creators"/>.
+              </xsl:when>
+              <xsl:otherwise/>
+            </xsl:choose>
             <xsl:choose>
               <xsl:when test="$created and $created !=''">
                 <xsl:text> </xsl:text>
