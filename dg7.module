@@ -1092,94 +1092,6 @@ return; */
 }
 
 /**
- * Generate an "Open a Cover Sheet" button for a specified object.
- *
- * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
- * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
- *
- * @param $pid
- * @param $tabToCopy
- * @return bool|array
- */
-function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
-  static $ns = 'mods';
-  static $nsU = 'http://www.loc.gov/mods/v3';
-
-  module_load_include('inc', 'csl', 'CSL');
-
-  // Retrieve the target Fedora object or return FALSE if there is none.
-  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
-
-  // Get the MODS content
-  if (empty($fedora_object['MODS'])) { return FALSE; }
-  $content = $mods = $fedora_object['MODS']->content;
-
-  // Don't do this on collection pages!
-  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
-  foreach ($content_models as $cm) {
-    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
-  }
-
-  // Examine the object pid and implement a namespace-specific transform...
-  list($ns, $pidn) = explode(':', $pid);
-  $pid = "$ns:$pidn";
-
-  // Check for a cover sheet file already in place.  If it is not, create a new one.
-  $coverFile = "public://coversheets/$pid.xml";
-
-  if (!file_exists($coverFile)) {
-
-    // Retrieve the cover sheet transform.
-    $module_path = drupal_get_path('module', 'dg7');
-    if ($ns === 'faulconer-art') {
-      $cs_path = $GLOBALS['base_url'] . "/$module_path/faulconerCoverSheet.xsl";
-    } else {
-      $cs_path = $GLOBALS['base_url'] . "/$module_path/grinnellCoverSheet.xsl";
-    }
-
-    // First, remove all /mods:relatedItem[@type="admin"] notes from the XML before it is
-    // saved.  This data is NEVER to be exposed.
-    // Save ONLY the <mods> element and its children.  Do NOT save any <xml...> elements!
-
-    $xml = new DOMDocument;
-    $xml->loadXML($mods);
-    $dx = new DOMXPath($xml);
-    $dx->registerNamespace($ns, $nsU);
-    $relatedItems = $dx->query("/mods:mods/mods:relatedItem[@type='admin']");
-    foreach ($relatedItems as $rI) {
-      $rI->parentNode->removeChild($rI);
-      $content = $xml->saveXML( );
-    }
-
-    $xml->loadXML($content);
-    $dx = new DOMXPath($xml);
-    $dx->registerNamespace($ns, $nsU);
-    $roots = $dx->query("/mods:mods");
-    foreach ($roots as $root) {
-      $content = $xml->saveXML($root);
-      break;
-    }
-
-    // Write the MODS content to a file with the cover sheet transform declared within.
-
-    $styleSheet = "<?xml-stylesheet href='$cs_path' type='text/xsl'?> \r\n";
-    if (!file_save_data($styleSheet . $content, $coverFile, FILE_EXISTS_REPLACE)) {
-      return FALSE;
-    }
-  }
-
-  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the cover sheet function.
-  $tab = $tabToCopy;
-  unset($tab['#link']);
-  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
-  $urlX = file_create_url($coverFile);
-  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
-  $tab['#link']['href'] = request_path( );
-  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
-  return $tab;
-}
-
-/**
  * Generate an "Add an Annotation" button for a specified object.
  *
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
@@ -1880,4 +1792,265 @@ function dg7_islandora_view_object() {
 
 }
 
+/**
+ * Generate an "Open a Cover Sheet" button for a specified object.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ * @param $tabToCopy
+ * @return bool|array
+ *
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+  static $ns = 'mods';
+  static $nsU = 'http://www.loc.gov/mods/v3';
 
+  module_load_include('inc', 'csl', 'CSL');
+
+  // Retrieve the target Fedora object or return FALSE if there is none.
+  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+  // Get the MODS content
+  if (empty($fedora_object['MODS'])) { return FALSE; }
+  $content = $mods = $fedora_object['MODS']->content;
+
+  // Don't do this on collection pages!
+  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($content_models as $cm) {
+    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+  }
+
+  // Examine the object pid and implement a namespace-specific transform...
+  list($ns, $pidn) = explode(':', $pid);
+  $pid = "$ns:$pidn";
+
+  // Check for a cover sheet file already in place.  If it is not, create a new one.
+  $coverFile = "public://coversheets/$pid.xml";
+
+  if (!file_exists($coverFile)) {
+
+    // Retrieve the cover sheet transform.
+    $module_path = drupal_get_path('module', 'dg7');
+    if ($ns === 'faulconer-art') {
+      $cs_path = $GLOBALS['base_url'] . "/$module_path/faulconerCoverSheet.xsl";
+    } else {
+      $cs_path = $GLOBALS['base_url'] . "/$module_path/grinnellCoverSheet.xsl";
+    }
+
+    // First, remove all /mods:relatedItem[@type="admin"] notes from the XML before it is
+    // saved.  This data is NEVER to be exposed.
+    // Save ONLY the <mods> element and its children.  Do NOT save any <xml...> elements!
+
+    $xml = new DOMDocument;
+    $xml->loadXML($mods);
+    $dx = new DOMXPath($xml);
+    $dx->registerNamespace($ns, $nsU);
+    $relatedItems = $dx->query("/mods:mods/mods:relatedItem[@type='admin']");
+    foreach ($relatedItems as $rI) {
+      $rI->parentNode->removeChild($rI);
+      $content = $xml->saveXML( );
+    }
+
+    $xml->loadXML($content);
+    $dx = new DOMXPath($xml);
+    $dx->registerNamespace($ns, $nsU);
+    $roots = $dx->query("/mods:mods");
+    foreach ($roots as $root) {
+      $content = $xml->saveXML($root);
+      break;
+    }
+
+    // Write the MODS content to a file with the cover sheet transform declared within.
+
+    $styleSheet = "<?xml-stylesheet href='$cs_path' type='text/xsl'?> \r\n";
+    if (!file_save_data($styleSheet . $content, $coverFile, FILE_EXISTS_REPLACE)) {
+      return FALSE;
+    }
+  }
+
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the cover sheet function.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
+  $urlX = file_create_url($coverFile);
+  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
+  $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
+  return $tab;
+}
+
+/**
+ * Generate coversheet(s) using TWIG and "Open a Cover Sheet" button for a specified object.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ * @param $tabToCopy
+ * @return bool|array
+ */
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+
+  // Retrieve the target Fedora object or return FALSE if there is none.
+  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+  // Get the MODS content
+  if (empty($fedora_object['MODS'])) { return FALSE; }
+  $content = $mods = $fedora_object['MODS']->content;
+
+  // Don't do this on collection pages!
+  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($content_models as $cm) {
+    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+  }
+
+  // Examine the object pid and implement a namespace-specific Twig transform...
+  list($ns, $pidn) = explode(':', $pid);
+  $pid = "$ns:$pidn";
+
+  // Check for a cover sheet file already in place.  If it is not, create a new one.
+  $coverFile = "public://coversheets/$pid.html";
+
+  if (!file_exists($coverFile)) {
+
+    // Lifted from https://stackoverflow.com/questions/6578832/how-to-convert-xml-into-array-in-php
+    $xml = simplexml_load_string($mods, "SimpleXMLElement", LIBXML_NOCDATA);
+    $array = xmlToArray($xml);
+
+    /* $json = json_encode($xml);  // Uber buggy!  Misses many attributes
+    $array = json_decode($json,TRUE); */
+
+    /* $p = xml_parser_create();  // works, but very hard to parse!
+    xml_parse_into_struct($p, $mods, $vals, $index);
+    xml_parser_free($p);
+    echo "Index array\n";
+    print_r($index);
+    echo "\nVals array\n";
+    print_r($vals);
+    $array = $vals;  */
+
+    // Retrieve the cover sheet template based on namespace.
+    $module_path = drupal_get_path('module', 'dg7');
+    $twig_path = "$module_path/twig";
+
+    // include and register Twig auto-loader
+    require_once DRUPAL_ROOT . '/vendor/twig/twig/lib/Twig/Autoloader.php';
+    Twig_Autoloader::register();
+
+    // per https://twig.symfony.com/doc/2.x/api.html
+    $loader = new Twig_Loader_Filesystem($twig_path);
+    $twig = new Twig_Environment($loader, array('cache' => 'sites/default/files/coversheets/twig_cache', ));
+    // $twig = new Twig_Environment($loader); // no caching!
+
+    // load template
+    if (!$template = $twig->loadTemplate("$ns.twig")) {
+      drupal_set_message("Could not open Twig template $module_path/twig/$ns.twig.", 'error');
+      return FALSE;
+    }
+
+    // render the template
+    $rendered = $template->render($array['mods']);
+
+    if (!file_save_data($rendered, $coverFile, FILE_EXISTS_REPLACE)) {
+      return FALSE;
+    }
+
+  }
+
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary
+  // to carry out the cover sheet function.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
+  $urlX = file_create_url($coverFile);
+  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
+  $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
+  return $tab;
+}
+
+/** Reliably parse XML into a PHP array.  Lifted from...
+ *   https://www.outlandish.com/blog/xml-to-json/
+ *
+ * @param $xml
+ * @param array $options
+ * @return array
+ */
+function xmlToArray($xml, $options = array()) {
+  $defaults = array(
+    'namespaceSeparator' => ':',  //you may want this to be something other than a colon
+    'attributePrefix' => '@',     //to distinguish between attributes and nodes with the same name
+    'alwaysArray' => array('name', 'namePart', 'role','identifier','relatedItem',
+      'titleInfo', 'note', 'extent', 'subject', 'topic'),     //array of xml tag names which should always become arrays
+    'autoArray' => true,          //only create arrays for tags which appear more than once
+    'textContent' => '$',         //key used for the text content of elements
+    'autoText' => false,           //skip textContent key if node has no attributes or child nodes
+    'keySearch' => false,         //optional search and replace on tag and attribute names
+    'keyReplace' => false         //replace values for above search values (as passed to str_replace())
+  );
+  $options = array_merge($defaults, $options);
+  $namespaces = $xml->getDocNamespaces();
+  $namespaces[''] = null; //add base (empty) namespace
+
+  //get attributes from all namespaces
+  $attributesArray = array();
+  foreach ($namespaces as $prefix => $namespace) {
+    foreach ($xml->attributes($namespace) as $attributeName => $attribute) {
+      //replace characters in attribute name
+      if ($options['keySearch']) $attributeName =
+        str_replace($options['keySearch'], $options['keyReplace'], $attributeName);
+      $attributeKey = $options['attributePrefix']
+        . ($prefix ? $prefix . $options['namespaceSeparator'] : '')
+        . $attributeName;
+      $attributesArray[$attributeKey] = (string)$attribute;
+    }
+  }
+
+  //get child nodes from all namespaces
+  $tagsArray = array();
+  foreach ($namespaces as $prefix => $namespace) {
+    foreach ($xml->children($namespace) as $childXml) {
+      //recurse into child nodes
+      $childArray = xmlToArray($childXml, $options);
+      list($childTagName, $childProperties) = each($childArray);
+
+      //replace characters in tag name
+      if ($options['keySearch']) $childTagName =
+        str_replace($options['keySearch'], $options['keyReplace'], $childTagName);
+      //add namespace prefix, if any
+      if ($prefix) $childTagName = $prefix . $options['namespaceSeparator'] . $childTagName;
+
+      if (!isset($tagsArray[$childTagName])) {
+        //only entry with this key
+        //test if tags of this type should always be arrays, no matter the element count
+        $tagsArray[$childTagName] =
+          in_array($childTagName, $options['alwaysArray']) || !$options['autoArray']
+            ? array($childProperties) : $childProperties;
+      } elseif (
+        is_array($tagsArray[$childTagName]) && array_keys($tagsArray[$childTagName])
+        === range(0, count($tagsArray[$childTagName]) - 1)
+      ) {
+        //key already exists and is integer indexed array
+        $tagsArray[$childTagName][] = $childProperties;
+      } else {
+        //key exists so convert to integer indexed array with previous value in position 0
+        $tagsArray[$childTagName] = array($tagsArray[$childTagName], $childProperties);
+      }
+    }
+  }
+
+  //get text content of node
+  $textContentArray = array();
+  $plainText = trim((string)$xml);
+  if ($plainText !== '') $textContentArray[$options['textContent']] = $plainText;
+
+  //stick it all together
+  $propertiesArray = !$options['autoText'] || $attributesArray || $tagsArray || ($plainText === '')
+    ? array_merge($attributesArray, $tagsArray, $textContentArray) : $plainText;
+
+  //return node as array
+  return array(
+    $xml->getName() => $propertiesArray
+  );
+}
