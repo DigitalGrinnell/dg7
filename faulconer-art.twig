@@ -18,6 +18,18 @@
   {% set isPartOf = '' %}
   {% set role = '' %}
   {% set nationality = '' %}
+  {% set location = '' %}
+
+  {# Location...only for Admins!  Use 'hasAdminAccess is defined' to determine if this is for an admin! #}
+  {% for item in relatedItem %}
+    {% if hasAdminAccess is defined and item['@type'] == 'admin' %}
+      {% for n in item['note'] %}
+        {% if n['@type'] == 'location' %}
+          {% set location = location ~ n['$']|trim ~ "<br/>" %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
 
   {# Creator names...  Only choose namePart values that are NOT iterable (have no attributes) #}
   {% for n in name %}
@@ -82,7 +94,7 @@
   {% for s in subject %}
     {% for t in s['topic'] %}
       {% if t['@displayLabel'] == 'nationality' %}
-        {% set nationality = t['$']|trim %}
+        {% set nationality = nationality ~ t['$']|trim ~ '<br/>' %}
       {% endif %}
     {% endfor %}
   {% endfor %}
@@ -159,7 +171,15 @@
         {% if local is not null and local is not empty %}
           <tr><td class="heading">Accession Number: </td><td>{{ local }}</td></tr>
         {% endif %}
+        {% if hasAdminAccess is defined and location is not null and location is not empty %}
+          <tr><td class="heading">Location: </td><td>{{ location }}</td></tr>
+        {% endif %}
+
       </table>
+
+      {% if hasAdminAccess is defined %}
+        <p>Note that this page was prepared for ADMIN USE ONLY!  It may contain confidential/protected data!</p>
+      {% endif %}
 
       <p style="clear:both; font:italic normal 8px Georgia, serif; color:gray; text-align:right; margin-right:20px">
         Cover sheet design by Grinnell College Libraries

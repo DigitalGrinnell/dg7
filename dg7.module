@@ -1808,22 +1808,29 @@ function dg7_islandora_view_object() {
 /**
  * Generate coversheet(s) using TWIG and create a "Cover Sheet" button for a specified object.
  *
+ * COVERSHEET and ADMIN_COVERSHEET datastreams are automatically added to an object -- IF the
+ * corresponding Twig templates exist -- the first time a user with 'add fedora datastreams'
+ * permissions views the object.
+ *
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
  * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
  *
  * @param $pid
+ *   The target Fedora object PID
  * @param $tabToCopy
+ *   The page tab structure where the "Cover Sheet" button is to be placed.
+ * @param $replace bool
+ *   If true then existing datastreams will be replaced with new ones.
  * @return bool|array
  *
  */
-function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
 
   // Retrieve the target Fedora object or return FALSE if there is none.
   if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
 
-  // Get the MODS content
+  // Check for MODS...if none return false.
   if (empty($fedora_object['MODS'])) { return FALSE; }
-  $content = $mods = $fedora_object['MODS']->content;
 
   // Don't do this on collection pages!
   $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
@@ -1831,64 +1838,78 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     if ($cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
   }
 
-  // Examine the object pid and implement a namespace-specific Twig transform...
+  // Examine the object pid to implement a namespace-specific Twig transform...
   list($ns, $pidn) = explode(':', $pid);
-  $pid = "$ns:$pidn";
+  define( 'TWIG_TEMPLATE_PATH', "public://coversheets/" );
 
-  // Determine if we should look for a COVERSHEET or ADMIN_COVERSHEET based on user permissions
-  if (user_access('view admin coversheets') && file_exists("public://coversheets/$ns.admin.twig")) {
-    $dsid = 'ADMIN_COVERSHEET';
-    $template = "$ns.admin.twig";
-  } else if (file_exists("public://coversheets/$ns.twig")) {
-    $dsid = 'COVERSHEET';
-    $template = "$ns.twig";
-  } else {
-    drupal_set_message("There is no Twig template at public://coversheets/$ns.twig.  A coversheet will not be available for this object.", 'warning');
-    return FALSE;
+  // Determine the scope of operations here based on user permissions
+  $template = (file_exists(TWIG_TEMPLATE_PATH . "$ns.twig") ? "$ns.twig" : FALSE );
+  $viewDS = (user_access('view admin coversheets') && $template ? "ADMIN_COVERSHEET" : ($template ? "COVERSHEET" : FALSE));
+  $buildDS = array( );
+  if (user_access('add fedora datastreams')) {
+    if ($replace || empty($fedora_object['COVERSHEET']) && $template) { $buildDS['COVERSHEET'] = $template; }
+    if ($replace || empty($fedora_object['ADMIN_COVERSHEET']) && $template) { $buildDS['ADMIN_COVERSHEET'] = $template; }
   }
 
-  // Check for the target COVERSHEET datastream already in place. If not found, build it.
-  if (empty($fedora_object[$dsid])) {
+  // Build missing and necessary datastreams according to $buildDS.
+  if (!empty($buildDS)) {
+    $mods = islandora_datastream_load('MODS', $fedora_object);
 
     // Lifted from https://stackoverflow.com/questions/6578832/how-to-convert-xml-into-array-in-php
-    $xml = simplexml_load_string($mods, "SimpleXMLElement", LIBXML_NOCDATA);
+    $xml = simplexml_load_string($mods->content, "SimpleXMLElement", LIBXML_NOCDATA);
     $array = xmlToArray($xml);
-
-    // Retrieve the cover sheet template based on namespace.
-    $module_path = drupal_get_path('module', 'dg7');
-    $twig_cache = "$module_path/twig_cache";
 
     // include and register Twig auto-loader
     require_once DRUPAL_ROOT . '/vendor/twig/twig/lib/Twig/Autoloader.php';
     Twig_Autoloader::register();
 
-    // per https://twig.symfony.com/doc/2.x/api.html
-    $loader = new Twig_Loader_Filesystem('public://coversheets');
-    $twig = new Twig_Environment($loader, array('cache' => $twig_cache));
-    // $twig = new Twig_Environment($loader); // no caching!
+    // Define the twig_cache and set the environment per https://twig.symfony.com/doc/2.x/api.html
+    $twig_cache = file_directory_temp() . "/twig_cache";
+    $loader = new Twig_Loader_Filesystem( TWIG_TEMPLATE_PATH );
+    $twig = new Twig_Environment($loader, array('cache' => $twig_cache));  // $twig = new Twig_Environment($loader); // no caching!
 
-    // load template
-    if (!$template = $twig->loadTemplate($template)) {
-      drupal_set_message("Could not open Twig template public://coversheets/$template.", 'error');
-      return FALSE;
+    // Loop on $buildDS... load the appropriate template, render the content, and save the result
+    foreach ($buildDS as $dsid => $template) {
+      if (!$twig_template = $twig->loadTemplate($template)) {
+        drupal_set_message("Could not open Twig template " . TWIG_TEMPLATE_PATH . "$template to generate a $dsid datastream.", 'error');
+        return FALSE;
+      }
+
+      // If this is an 'admin' rendering, add a special variable to the $array['mods'] content...
+      $copy = $array;
+      if ($dsid === "ADMIN_COVERSHEET") {
+        $copy['mods']['hasAdminAccess'] = 'TRUE';
+      }
+
+      // Render the template and save result as a new datastream
+      $rendered = $twig_template->render($copy['mods']);
+      $newDS = dg7_add_datastream($fedora_object, $rendered, 'text/html', 'M', $dsid, 'Coversheet');
+
+      try {
+        $fedora_object->ingestDatastream($newDS);
+        drupal_set_message("A new $dsid datastream was added to object $pid.", 'status');
+      } catch (Exception $e) {
+        drupal_set_message("Unable to add $dsid datastream to $pid.  Exception is: " . $e->getMessage(), 'warning');
+        return FALSE;
+      }
     }
-
-    // Render the template and save result as a new datastream
-    $rendered = $template->render($array['mods']);
-    $newDS = dg7_add_datastream($fedora_object, $rendered, 'text/html', 'M', $dsid, 'Coversheet');
-    $fedora_object->ingestDatastream($newDS);
-
   }
 
+  // If we have a viewable datastream ($viewDS)...
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
   // to carry out the cover sheet function.
-  $tab = $tabToCopy;
-  unset($tab['#link']);
-  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
-  $url = base_path() . "islandora/object/$pid/datastream/$dsid/view";
-  $tab['#link']['href'] = request_path( );
-  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
-  return $tab;
+
+  if ($viewDS) {
+    $tab = $tabToCopy;
+    unset($tab['#link']);
+    $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
+    $url = base_path() . "islandora/object/$pid/datastream/$viewDS/view";
+    $tab['#link']['href'] = request_path();
+    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
+    return $tab;
+  } else {
+    return FALSE;
+  }
 }
 
 /** Reliably parse XML into a PHP array.  Lifted from...
