@@ -1835,9 +1835,20 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
   list($ns, $pidn) = explode(':', $pid);
   $pid = "$ns:$pidn";
 
-  // Check for a COVERSHEET datastream already in place.
-  //   If not found, build it.
-  if (empty($fedora_object['COVERSHEET'])) {
+  // Determine if we should look for a COVERSHEET or ADMIN_COVERSHEET based on user permissions
+  if (user_access('view admin coversheets') && file_exists("public://coversheets/$ns.admin.twig")) {
+    $dsid = 'ADMIN_COVERSHEET';
+    $template = "$ns.admin.twig";
+  } else if (file_exists("public://coversheets/$ns.twig")) {
+    $dsid = 'COVERSHEET';
+    $template = "$ns.twig";
+  } else {
+    drupal_set_message("There is no Twig template at public://coversheets/$ns.twig.  A coversheet will not be available for this object.", 'warning');
+    return FALSE;
+  }
+
+  // Check for the target COVERSHEET datastream already in place. If not found, build it.
+  if (empty($fedora_object[$dsid])) {
 
     // Lifted from https://stackoverflow.com/questions/6578832/how-to-convert-xml-into-array-in-php
     $xml = simplexml_load_string($mods, "SimpleXMLElement", LIBXML_NOCDATA);
@@ -1845,28 +1856,28 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
 
     // Retrieve the cover sheet template based on namespace.
     $module_path = drupal_get_path('module', 'dg7');
-    $twig_path = "$module_path/twig";
+    $twig_cache = "$module_path/twig_cache";
 
     // include and register Twig auto-loader
     require_once DRUPAL_ROOT . '/vendor/twig/twig/lib/Twig/Autoloader.php';
     Twig_Autoloader::register();
 
     // per https://twig.symfony.com/doc/2.x/api.html
-    $loader = new Twig_Loader_Filesystem($twig_path);
-    $twig = new Twig_Environment($loader, array('cache' => "$module_path/coversheets/twig_cache"));
+    $loader = new Twig_Loader_Filesystem('public://coversheets');
+    $twig = new Twig_Environment($loader, array('cache' => $twig_cache));
     // $twig = new Twig_Environment($loader); // no caching!
 
     // load template
-    if (!$template = $twig->loadTemplate("$ns.twig")) {
-      drupal_set_message("Could not open Twig template $module_path/twig/$ns.twig.", 'error');
+    if (!$template = $twig->loadTemplate($template)) {
+      drupal_set_message("Could not open Twig template public://coversheets/$template.", 'error');
       return FALSE;
     }
 
-    // render the template
+    // Render the template and save result as a new datastream
     $rendered = $template->render($array['mods']);
-
-    $newDS = dg7_add_datastream($fedora_object, $rendered);
+    $newDS = dg7_add_datastream($fedora_object, $rendered, 'text/html', 'M', $dsid, 'Coversheet');
     $fedora_object->ingestDatastream($newDS);
+
   }
 
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
@@ -1874,7 +1885,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
   $tab = $tabToCopy;
   unset($tab['#link']);
   $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
-  $url = base_path( ) . "islandora/object/$pid/datastream/COVERSHEET/view";
+  $url = base_path() . "islandora/object/$pid/datastream/$dsid/view";
   $tab['#link']['href'] = request_path( );
   $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
   return $tab;
@@ -1990,4 +2001,18 @@ function dg7_add_datastream($object, $newContent, $mime='text/html', $controlGro
   $newDS->mimetype = $mime;
   $newDS->setContentFromString($newContent);
   return $newDS;
+}
+
+/**
+ * Implements hook_permission.
+ *
+ * @return array
+ */
+function dg7_permission() {
+  return array(
+    'view admin coversheets' => array(
+      'title' => t('View ADMIN_COVERSHEETs '),
+      'description' => t('View ADMIN_COVERSHEET datastreams rather than COVERSHEET.'),
+    ),
+  );
 }
