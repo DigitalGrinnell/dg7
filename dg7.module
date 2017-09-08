@@ -1844,7 +1844,6 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
 
   // Determine the scope of operations here based on user permissions
   $template = (file_exists(TWIG_TEMPLATE_PATH . "$ns.twig") ? "$ns.twig" : FALSE );
-  $viewDS = (user_access('view admin coversheets') && $template ? "ADMIN_COVERSHEET" : ($template ? "COVERSHEET" : FALSE));
   $buildDS = array( );
   if (user_access('add fedora datastreams')) {
     if ($replace || empty($fedora_object['COVERSHEET']) && $template) { $buildDS['COVERSHEET'] = $template; }
@@ -1899,7 +1898,8 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
   // to carry out the cover sheet function.
 
-  if ($viewDS) {
+  $viewDS = (user_access('view admin coversheets') && $template ? "ADMIN_COVERSHEET" : ($template ? "COVERSHEET" : FALSE));
+  if ($viewDS && !empty($fedora_object[$viewDS])) {
     $tab = $tabToCopy;
     unset($tab['#link']);
     $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
