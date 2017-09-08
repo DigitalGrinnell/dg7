@@ -1701,7 +1701,9 @@ function dg7_islandora_view_object() {
   // First grab the MODS metadata and set all variables
 
   $object = menu_get_object('islandora_object', 2);
-  if (!isset($object['MODS'])) { return; }
+  if (!isset($object['MODS'])) {
+    return;
+  }
 
   // Get the object's collection memberships...
   // If 'scholar' is NOT part of any collection name then return without doing more.
@@ -1710,31 +1712,40 @@ function dg7_islandora_view_object() {
   $collections = $object->relationships->get(FEDORA_RELS_EXT_URI, 'isMemberOfCollection');
   foreach ($collections as $collection) {
     $cid = $collection['object']['value'];
-    if (strpos($cid, 'scholar') > 0) { $scholarly = TRUE; }
+    if (strpos($cid, 'scholar') > 0) {
+      $scholarly = TRUE;
+    }
   }
 
-  if (!$scholarly) { return; }
-  $tags = array( );
+  if (!$scholarly) {
+    return;
+  }
+  $tags = array();
 
   // Get Title.
   $doc = new DOMDocument();
   $doc->loadXML($object['MODS']->content);
   $xpath = new DOMXPath($doc);
   $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-  $xpath_results = $xpath->query( variable_get('dg7_title_xpath', '/mods:mods/mods:titleInfo/mods:title'));
-  if ($xpath_results->length == 0) { return; }
+  $xpath_results = $xpath->query(variable_get('dg7_title_xpath', '/mods:mods/mods:titleInfo/mods:title'));
+  if ($xpath_results->length == 0) {
+    return;
+  }
   $title = $xpath_results->item(0)->nodeValue;
-  if (!$title) { return; }
+  if (!$title) {
+    return;
+  }
 
   $tags[] = array(
     '#tag' => 'meta',
     '#attributes' => array(
       'name' => 'citation_title',
       'content' => $title,
-    ));
+    )
+  );
 
   // Get the dateCreated (Index Date).
-  $xpath_results = $xpath->query( variable_get('dg7_index_date_xpath', '/mods:mods/mods:originInfo/mods:dateCreated'));
+  $xpath_results = $xpath->query(variable_get('dg7_index_date_xpath', '/mods:mods/mods:originInfo/mods:dateCreated'));
   if ($xpath_results->length > 0) {
     $indexDate = $xpath_results->item(0)->nodeValue;
 
@@ -1763,14 +1774,15 @@ function dg7_islandora_view_object() {
   } */
 
   // Get Creator(s)... aka Author(s)
-  $xpath_results = $xpath->query( variable_get('dg7_creators_xpath', "/mods:mods/mods:name/mods:role/mods:roleTerm[text()='creator']/../../mods:namePart[not(@*)]"));
+  $xpath_results = $xpath->query(variable_get('dg7_creators_xpath', "/mods:mods/mods:name/mods:role/mods:roleTerm[text()='creator']/../../mods:namePart[not(@*)]"));
   foreach ($xpath_results as $result) {
     $tags[] = array(
       '#tag' => 'meta',
       '#attributes' => array(
         'name' => 'citation_author',
         'content' => $result->nodeValue,
-      ));
+      )
+    );
   }
 
   $pid = $object->id;
@@ -1778,7 +1790,7 @@ function dg7_islandora_view_object() {
     '#tag' => 'meta',
     '#attributes' => array(
       'name' => 'citation_abstract_html_url',
-      'content' => "https://digital.grinnell.edu/islandora/object/".$pid,
+      'content' => "https://digital.grinnell.edu/islandora/object/" . $pid,
     )
   );
 
@@ -1792,8 +1804,9 @@ function dg7_islandora_view_object() {
 
 }
 
+
 /**
- * Generate an "Open a Cover Sheet" button for a specified object.
+ * Generate coversheet(s) using TWIG and create a "Cover Sheet" button for a specified object.
  *
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
  * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
@@ -1802,93 +1815,6 @@ function dg7_islandora_view_object() {
  * @param $tabToCopy
  * @return bool|array
  *
-function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
-  static $ns = 'mods';
-  static $nsU = 'http://www.loc.gov/mods/v3';
-
-  module_load_include('inc', 'csl', 'CSL');
-
-  // Retrieve the target Fedora object or return FALSE if there is none.
-  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
-
-  // Get the MODS content
-  if (empty($fedora_object['MODS'])) { return FALSE; }
-  $content = $mods = $fedora_object['MODS']->content;
-
-  // Don't do this on collection pages!
-  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
-  foreach ($content_models as $cm) {
-    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
-  }
-
-  // Examine the object pid and implement a namespace-specific transform...
-  list($ns, $pidn) = explode(':', $pid);
-  $pid = "$ns:$pidn";
-
-  // Check for a cover sheet file already in place.  If it is not, create a new one.
-  $coverFile = "public://coversheets/$pid.xml";
-
-  if (!file_exists($coverFile)) {
-
-    // Retrieve the cover sheet transform.
-    $module_path = drupal_get_path('module', 'dg7');
-    if ($ns === 'faulconer-art') {
-      $cs_path = $GLOBALS['base_url'] . "/$module_path/faulconerCoverSheet.xsl";
-    } else {
-      $cs_path = $GLOBALS['base_url'] . "/$module_path/grinnellCoverSheet.xsl";
-    }
-
-    // First, remove all /mods:relatedItem[@type="admin"] notes from the XML before it is
-    // saved.  This data is NEVER to be exposed.
-    // Save ONLY the <mods> element and its children.  Do NOT save any <xml...> elements!
-
-    $xml = new DOMDocument;
-    $xml->loadXML($mods);
-    $dx = new DOMXPath($xml);
-    $dx->registerNamespace($ns, $nsU);
-    $relatedItems = $dx->query("/mods:mods/mods:relatedItem[@type='admin']");
-    foreach ($relatedItems as $rI) {
-      $rI->parentNode->removeChild($rI);
-      $content = $xml->saveXML( );
-    }
-
-    $xml->loadXML($content);
-    $dx = new DOMXPath($xml);
-    $dx->registerNamespace($ns, $nsU);
-    $roots = $dx->query("/mods:mods");
-    foreach ($roots as $root) {
-      $content = $xml->saveXML($root);
-      break;
-    }
-
-    // Write the MODS content to a file with the cover sheet transform declared within.
-
-    $styleSheet = "<?xml-stylesheet href='$cs_path' type='text/xsl'?> \r\n";
-    if (!file_save_data($styleSheet . $content, $coverFile, FILE_EXISTS_REPLACE)) {
-      return FALSE;
-    }
-  }
-
-  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the cover sheet function.
-  $tab = $tabToCopy;
-  unset($tab['#link']);
-  $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
-  $urlX = file_create_url($coverFile);
-  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
-  $tab['#link']['href'] = request_path( );
-  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
-  return $tab;
-}
-
-/**
- * Generate coversheet(s) using TWIG and "Open a Cover Sheet" button for a specified object.
- *
- * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
- * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
- *
- * @param $pid
- * @param $tabToCopy
- * @return bool|array
  */
 function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
 
@@ -1902,33 +1828,20 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
   // Don't do this on collection pages!
   $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
   foreach ($content_models as $cm) {
-    if (!$cm['object']['literal'] && $cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+    if ($cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
   }
 
   // Examine the object pid and implement a namespace-specific Twig transform...
   list($ns, $pidn) = explode(':', $pid);
   $pid = "$ns:$pidn";
 
-  // Check for a cover sheet file already in place.  If it is not, create a new one.
-  $coverFile = "public://coversheets/$pid.html";
-
-  if (!file_exists($coverFile)) {
+  // Check for a COVERSHEET datastream already in place.
+  //   If not found, build it.
+  if (empty($fedora_object['COVERSHEET'])) {
 
     // Lifted from https://stackoverflow.com/questions/6578832/how-to-convert-xml-into-array-in-php
     $xml = simplexml_load_string($mods, "SimpleXMLElement", LIBXML_NOCDATA);
     $array = xmlToArray($xml);
-
-    /* $json = json_encode($xml);  // Uber buggy!  Misses many attributes
-    $array = json_decode($json,TRUE); */
-
-    /* $p = xml_parser_create();  // works, but very hard to parse!
-    xml_parse_into_struct($p, $mods, $vals, $index);
-    xml_parser_free($p);
-    echo "Index array\n";
-    print_r($index);
-    echo "\nVals array\n";
-    print_r($vals);
-    $array = $vals;  */
 
     // Retrieve the cover sheet template based on namespace.
     $module_path = drupal_get_path('module', 'dg7');
@@ -1940,7 +1853,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
 
     // per https://twig.symfony.com/doc/2.x/api.html
     $loader = new Twig_Loader_Filesystem($twig_path);
-    $twig = new Twig_Environment($loader, array('cache' => 'sites/default/files/coversheets/twig_cache', ));
+    $twig = new Twig_Environment($loader, array('cache' => "$module_path/coversheets/twig_cache"));
     // $twig = new Twig_Environment($loader); // no caching!
 
     // load template
@@ -1952,10 +1865,8 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     // render the template
     $rendered = $template->render($array['mods']);
 
-    if (!file_save_data($rendered, $coverFile, FILE_EXISTS_REPLACE)) {
-      return FALSE;
-    }
-
+    $newDS = dg7_add_datastream($fedora_object, $rendered);
+    $fedora_object->ingestDatastream($newDS);
   }
 
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
@@ -1963,8 +1874,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
   $tab = $tabToCopy;
   unset($tab['#link']);
   $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
-  $urlX = file_create_url($coverFile);
-  $url = str_replace('%3A',':',$urlX);   // make the URL match the filename...exactly!
+  $url = base_path( ) . "islandora/object/$pid/datastream/COVERSHEET/view";
   $tab['#link']['href'] = request_path( );
   $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
   return $tab;
@@ -1985,7 +1895,7 @@ function xmlToArray($xml, $options = array()) {
       'titleInfo', 'note', 'extent', 'subject', 'topic'),     //array of xml tag names which should always become arrays
     'autoArray' => true,          //only create arrays for tags which appear more than once
     'textContent' => '$',         //key used for the text content of elements
-    'autoText' => false,           //skip textContent key if node has no attributes or child nodes
+    'autoText' => false,          //skip textContent key if node has no attributes or child nodes
     'keySearch' => false,         //optional search and replace on tag and attribute names
     'keyReplace' => false         //replace values for above search values (as passed to str_replace())
   );
@@ -2053,4 +1963,31 @@ function xmlToArray($xml, $options = array()) {
   return array(
     $xml->getName() => $propertiesArray
   );
+}
+
+/**
+ * Add a datastream to an existing Fedora object.
+ *
+ * @param FedoraObject $object
+ *   The FedoraObject to receive the new datastream.
+ * @param string $newContent
+ *   The text content of the new datastream.
+ * @param string $mime
+ *   The MIME type of the datastream to be created.  Default is 'text/html'.
+ * @param string $controlGroup
+ *   The controlGroup (X, I, M, etc.) of the datastream to be created.  Default is 'M' for Managed.
+ * @param string $newID
+ *   The new DSID to be created.  Default is COVERSHEET.
+ * @param string $newLabel
+ *   The new datastream label to be created.  Default is "Coversheet".
+ *
+ * @return FedoraDatastream
+ *   The new FedoraDatastream object, not yet ingested.
+ */
+function dg7_add_datastream($object, $newContent, $mime='text/html', $controlGroup='M', $newID='COVERSHEET', $newLabel='Coversheet') {
+  $newDS = $object->constructDatastream($newID, $controlGroup);
+  $newDS->label = $newLabel;
+  $newDS->mimetype = $mime;
+  $newDS->setContentFromString($newContent);
+  return $newDS;
 }
