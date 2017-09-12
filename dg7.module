@@ -1819,12 +1819,13 @@ function dg7_islandora_view_object() {
  *   The target Fedora object PID
  * @param $tabToCopy
  *   The page tab structure where the "Cover Sheet" button is to be placed.
- * @param $replace bool
- *   If true then existing datastreams will be replaced with new ones.
- * @return bool|array
+ * @param $drush bool
+ *   If true (called from drush) then existing datastreams will be replaced with new ones
+ *     and no "Cover Sheet" tab will be generated.
+ * @return bool|array|integer
  *
  */
-function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $drush=FALSE) {
 
   // Retrieve the target Fedora object or return FALSE if there is none.
   if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
@@ -1846,8 +1847,8 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
   $template = (file_exists(TWIG_TEMPLATE_PATH . "$ns.twig") ? "$ns.twig" : FALSE );
   $buildDS = array( );
   if (user_access('add fedora datastreams')) {
-    if ($replace || empty($fedora_object['COVERSHEET']) && $template) { $buildDS['COVERSHEET'] = $template; }
-    if ($replace || empty($fedora_object['ADMIN_COVERSHEET']) && $template) { $buildDS['ADMIN_COVERSHEET'] = $template; }
+    if ($drush || empty($fedora_object['COVERSHEET']) && $template) { $buildDS['COVERSHEET'] = $template; }
+    if ($drush || empty($fedora_object['ADMIN_COVERSHEET']) && $template) { $buildDS['ADMIN_COVERSHEET'] = $template; }
   }
 
   // Build missing and necessary datastreams according to $buildDS.
@@ -1866,6 +1867,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
     $twig_cache = file_directory_temp() . "/twig_cache";
     $loader = new Twig_Loader_Filesystem( TWIG_TEMPLATE_PATH );
     $twig = new Twig_Environment($loader, array('cache' => $twig_cache));  // $twig = new Twig_Environment($loader); // no caching!
+    $count = 0;
 
     // Loop on $buildDS... load the appropriate template, render the content, and save the result
     foreach ($buildDS as $dsid => $template) {
@@ -1887,12 +1889,16 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $replace=FALSE) {
       try {
         $fedora_object->ingestDatastream($newDS);
         drupal_set_message("A new $dsid datastream was added to object $pid.", 'status');
+        $count++;
       } catch (Exception $e) {
         drupal_set_message("Unable to add $dsid datastream to $pid.  Exception is: " . $e->getMessage(), 'warning');
         return FALSE;
       }
     }
   }
+
+  // If this was called from drush ($drush === TRUE) then we are done.  Return FALSE.
+  if ($drush) { return $count; }
 
   // If we have a viewable datastream ($viewDS)...
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
