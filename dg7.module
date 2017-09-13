@@ -232,7 +232,7 @@ jQuery( window ).resize(function() {
  * The view defined here is "Collection" exported from Digital on 16-August-2017.
  *
  */
-function dg7_views_default_views(&$views) {
+function dg7_views_default_views( ) {
   watchdog('dg7','dg7_views_default_views has been called.', NULL,WATCHDOG_NOTICE);
   // return;  @TODO Comment out the above watchdog call after a week or two of testing.
 
@@ -334,10 +334,12 @@ function dg7_views_default_views(&$views) {
     } else {
       $view = list_view_handler($pid, $collection, $view);
     }
+    watchdog('dg7', "dg7_collection view display was created for $pid.", NULL, WATCHDOG_NOTICE);
   }
 
-  // Override the existing view with this new definition.
-  $views['dg7_collection'] = $view;
+  // Add this new view definition.
+  $views[$view->name] = $view;
+  return $views;
 }
 
 /**
