@@ -233,8 +233,8 @@ jQuery( window ).resize(function() {
  *
  */
 function dg7_views_default_views_alter(&$views) {
-  watchdog('dg7','dg7_views_default_views_alter has been called but it is currently disabled.', NULL,WATCHDOG_NOTICE);
-  return;
+  watchdog('dg7','dg7_views_default_views_alter has been called.', NULL,WATCHDOG_NOTICE);
+  // return;
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
