@@ -334,7 +334,7 @@ function dg7_views_default_views( ) {
     } else {
       $view = list_view_handler($pid, $collection, $view);
     }
-    watchdog('dg7', "dg7_collection view display was created for $pid.", NULL, WATCHDOG_NOTICE);
+    // watchdog('dg7', "dg7_collection view display was created for $pid.", NULL, WATCHDOG_NOTICE);
   }
 
   // Add this new view definition.
