@@ -225,16 +225,16 @@ jQuery( window ).resize(function() {
 
 
 /**
- * Implements hook_views_default_views_alter().
+ * Implements hook_views_default_views().
  *
  * This hook implementation technique lifted from https://www.drupal.org/docs/7/modules/views/views-howtos/overriding-default-views-in-code on 10-August-2017.
  *
  * The view defined here is "Collection" exported from Digital on 16-August-2017.
  *
  */
-function dg7_views_default_views_alter(&$views) {
-  watchdog('dg7','dg7_views_default_views_alter has been called.', NULL,WATCHDOG_NOTICE);
-  // return;
+function dg7_views_default_views(&$views) {
+  watchdog('dg7','dg7_views_default_views has been called.', NULL,WATCHDOG_NOTICE);
+  // return;  @TODO Comment out the above watchdog call after a week or two of testing.
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
