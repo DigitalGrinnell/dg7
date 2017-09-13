@@ -738,15 +738,17 @@ function dg7_islandora_solr_query_alter(&$isq) {
   $collection = FALSE;
   if (isset($isq->internalSolrParams['f']) && isset($isq->solrParams['fq'])) {
     foreach ($isq->solrParams['fq'] as $fq) {
+      // drupal_set_message(__FUNCTION__ . " in foreach loop fq = '$fq'.", 'status');
       if (strstr($fq, 'RELS_EXT_isMemberOfCollection') && (strpos($fq, '/') != FALSE)) {
         list($junk, $tail) = explode('/', $fq);
-        $collection = str_replace('\\', '', $tail);
-        /* $msg = __FUNCTION__ . ' called with collection = ' . $collection;
-        drupal_set_message($msg, 'status'); */
+        $collection = trim(str_replace('\\', '', $tail), ')' );
+        // $msg = __FUNCTION__ . ' called with collection = ' . $collection;
+        // drupal_set_message($msg, 'status');
         break;
       }
     }
   }
+
 
   // Now, set the sort order.  Note that sort should be a csv string, not an array!
   $isq->solrParams['sort'] = 'dg_primarySort_s asc';  // everything sorts by dg_primarySort_s first!
@@ -763,15 +765,15 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     // Sort by date then label.
 
-    case 'grinnell:phpp':                 // The Poweshiek History Preservation Project
-    case 'grinnell:college-history':      // The Early College History collection
-    case 'grinnell:jimmy-ley':            // The Jimmy Ley Collection
-    case 'grinnell:gwcc':                 // The George Washington Cook Correspondence
-    case 'grinnell:postcards':            // Historic Iowa Postcards
-    case 'grinnell:geology':              // Geology (Fossils) Collection
-    case 'grinnell:physics-museum':       // Physics Museum
-    case 'grinnell:grinnell-in-china':    // Grinnell In China
-    case 'grinnell:ancient-coins':        // Ancient Coins
+    case 'grinnell:phpp':                   // The Poweshiek History Preservation Project
+    case 'grinnell:college-history':        // The Early College History collection
+    case 'grinnell:jimmy-ley':              // The Jimmy Ley Collection
+    case 'grinnell:gwcc':                   // The George Washington Cook Correspondence
+    case 'grinnell:postcards':              // Historic Iowa Postcards
+    case 'grinnell:geology':                // Geology (Fossils) Collection
+    case 'grinnell:physics-museum':         // Physics Museum
+    case 'grinnell:grinnell-in-china':      // Grinnell In China
+    case 'grinnell:ancient-coins':          // Ancient Coins
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
@@ -800,6 +802,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
       break;
   }
 
+  // drupal_set_message('<pre> isq after query_alter: '. print_r($isq, true) .'</pre>');
   return;
 }
 
