@@ -233,8 +233,16 @@ jQuery( window ).resize(function() {
  *
  */
 function dg7_views_default_views( ) {
-  watchdog('dg7','dg7_views_default_views has been called.', NULL,WATCHDOG_NOTICE);
-  // return;  @TODO Comment out the above watchdog call after a week or two of testing.
+  $maintenance = variable_get('maintenance_mode', 0);
+  if (!$maintenance) {  // site is NOT in maintenance mode...do nothing here!
+    watchdog('dg7','dg7_views_default_views has been called but the site is NOT in maintenance mode so the views will NOT be updated.', NULL,WATCHDOG_NOTICE);
+    return;
+  } else {
+    $msg = 'dg7_views_default_views has been called in MAINTENANCE MODE so views WILL be updated.';
+    watchdog('dg7',$msg, NULL,WATCHDOG_NOTICE);
+    drupal_set_message($msg);
+    drupal_set_message("Note that you MUST alter the new dg7_collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.", 'warning');
+  }
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
