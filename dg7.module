@@ -223,7 +223,6 @@ jQuery( window ).resize(function() {
 }
 
 
-
 /**
  * Implements hook_views_default_views().
  *
@@ -233,6 +232,7 @@ jQuery( window ).resize(function() {
  *
  */
 function dg7_views_default_views( ) {
+
   $maintenance = variable_get('maintenance_mode', 0);
   if (!$maintenance) {  // site is NOT in maintenance mode...do nothing here!
     watchdog('dg7','dg7_views_default_views has been called but the site is NOT in maintenance mode so the views will NOT be updated.', NULL,WATCHDOG_NOTICE);
@@ -619,10 +619,10 @@ function dg7_islandora_solr_advanced_search_form_alter_helper(&$form) {
     }
   }
 
-  // Last order of business...if we are in a collection scope, add the checkbox control.
+  /* Last order of business...if we are in a collection scope, add the checkbox control.
   if ($scope && module_exists('islandora_solr_collection_search')) {
     islandora_solr_collection_search_form_add_scope_control($scope, $form, $form_state);
-  }
+  } */
 
   return;
 }
@@ -1301,6 +1301,21 @@ function dg7_menu_alter(&$items) {
     'access callback' => 'dg7_download_access',
     'access arguments' => NULL,
   );
+
+  /*
+  $items['islandora/object/%/manage'] = array(
+    'title' => 'Manage Object',
+    'description' => 'Manage this object.',
+    'type' => MENU_NORMAL_ITEM,
+    'page callback' => NULL,
+    'page arguments' => NULL,
+    'menu_name' => 'manage-fedora-object',
+    'access callback' => 'user_is_logged_in',  // TRUE, 'user_is_logged_in' or user_is_anonymous to check if logged in
+    'access arguments' => NULL,
+    'expanded' => TRUE,
+    // 'link_path' => 'islandora/object/%/manage',
+  ); */
+
   return $items;
 }
 
