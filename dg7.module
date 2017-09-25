@@ -759,7 +759,6 @@ function dg7_islandora_solr_query_alter(&$isq) {
     }
   }
 
-
   // Now, set the sort order.  Note that sort should be a csv string, not an array!
   $isq->solrParams['sort'] = 'dg_primarySort_s asc';  // everything sorts by dg_primarySort_s first!
 
@@ -771,7 +770,6 @@ function dg7_islandora_solr_query_alter(&$isq) {
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', dg_hidden_creators_s asc';
       break;
-
 
     // Sort by date then label.
 
@@ -1939,7 +1937,7 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $drush=FALSE) {
     $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
     $url = base_path() . "islandora/object/$pid/datastream/$viewDS/view";
     $tab['#link']['href'] = request_path();
-    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenPrintableCoversheet('$url')";  // This option is key to making this open as a new window!
+    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a new window!
     return $tab;
   } else {
     return FALSE;
@@ -2070,4 +2068,60 @@ function dg7_permission() {
       'description' => t('View ADMIN_COVERSHEET datastreams rather than COVERSHEET.'),
     ),
   );
+}
+
+
+/**
+ * Generate a simple view of an object's OCR or FULL_TEXT datastream.
+ *
+ * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
+ * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
+ *
+ * @param $pid
+ *   The target Fedora object PID
+ * @param $tabToCopy
+ *   The page tab structure where the "View OCR" button is to be placed.
+ * @return bool|array|integer
+ *
+ */
+function dg7_controls_view_OCR($pid, $tabToCopy) {
+
+  // Retrieve the target Fedora object or return FALSE if there is none.
+  if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
+
+  // Don't do this on collection pages!
+  $content_models = $fedora_object->relationships->get('info:fedora/fedora-system:def/model#', 'hasModel');
+  foreach ($content_models as $cm) {
+    if ($cm['object']['value'] === 'islandora:collectionCModel') { return FALSE; }
+  }
+
+  // Check for OCR or FULL_TEXT...if none, or "blank", return false.
+  $target = $size = FALSE;
+  if (!empty($fedora_object['OCR'])) {
+    $target = 'OCR';
+    $size = $fedora_object['OCR']->size;
+  } else if (!empty($fedora_object['FULL_TEXT'])) {
+    $target = 'FULL_TEXT';
+    $size = $fedora_object['FULL_TEXT']->size;
+  } else {
+    return FALSE;
+  }
+
+  if ($size === FALSE || $size < 1) { return FALSE; }
+
+  // If we have a viewable datastream ($target)...
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary
+  // to carry out the cover sheet function.
+
+  if ($target) {
+    $tab = $tabToCopy;
+    unset($tab['#link']);
+    $tab['#link']['title'] = "View OCR";
+    $url = base_path() . "islandora/object/$pid/datastream/$target/view";
+    $tab['#link']['href'] = request_path();
+    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a new window!
+    return $tab;
+  } else {
+    return FALSE;
+  }
 }
