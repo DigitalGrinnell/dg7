@@ -2125,3 +2125,40 @@ function dg7_controls_view_OCR($pid, $tabToCopy) {
     return FALSE;
   }
 }
+
+/**
+ * Implements islandora_bagit_filter_batch.
+ *
+ * This function tests the islandora_bagit_skip_existing variable.  If this variable is set TRUE
+ * the module will test for an existing bag in offline storage and skip the creation of a new bag
+ * if an existing bag is found.
+ *
+ * Use 'drush vset islandora_bagit_skip_existing TRUE' to turn object skipping on.  Default is FALSE.
+ *
+ * This function will attempt to look in a mounted archive folder for an object named
+ *    /archive/<namespace>_bags/Bag-<PID_with_underscore>.tgz
+ *
+ * @param $pid
+ *   The target Fedora object PID
+ * @return bool
+ *   Returns TRUE to skip the target PID, FALSE if not.
+ */
+function dg7_islandora_bagit_filter_batch($pid) {
+  // Always filter out sub-collections with non-numeric PIDs!
+  list($ns, $pidn) = explode(':', $pid);
+  if (!is_numeric($pidn)) { return TRUE; }
+  // Not a sub-collection...continue testing.
+  $skip_existing = variable_get('islandora_bagit_skip_existing', FALSE);
+  if (!$skip_existing) {
+    return FALSE;
+  } else {
+    $underscored = str_replace('-','_', $ns);
+    list($stripped, $extra) = explode('_', $underscored);
+    $target = "/archive/" . $stripped . "_bags/Bag-" . $underscored . '_' . $pidn . ".tgz";
+    if (file_exists($target)) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
+  }
+}
