@@ -51,14 +51,14 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['empty']['area']['field'] = 'area';
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'This collection contains no visible items at this time.  Our collection visibility sometimes changes with time so please check back here at a later date.  If you feel that this message is incorrect please use the "Report a Problem" link at the bottom of the page to let us know.  Thank you.';
-  // Field: Islandora Solr: dg_creators_s
-  $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
-  $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
-  $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
-  $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
-  $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
-  $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_extension_creators_ss
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['id'] = 'mods_extension_creators_ss';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['field'] = 'mods_extension_creators_ss';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['label'] = '';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['link_to_object'] = 0;
   // Field: Islandora Solr: fgs_label_s
   $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
   $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
@@ -96,7 +96,7 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['fields']['PID']['field'] = 'PID';
   $handler->display->display_options['fields']['PID']['label'] = '';
   $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><h3><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></h3></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><h3><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></h3></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div></div><hr />';
   $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
@@ -286,14 +286,14 @@ function dg7_views_default_views( ) {
   $handler->display->display_options['empty']['area']['field'] = 'area';
   $handler->display->display_options['empty']['area']['empty'] = TRUE;
   $handler->display->display_options['empty']['area']['content'] = 'This collection contains no visible items at this time.  Our collection visibility sometimes changes with time so please check back here at a later date.  If you feel that this message is incorrect please use the "Report a Problem" link at the bottom of the page to let us know.  Thank you.';
-  // Field: Islandora Solr: dg_creators_s
-  $handler->display->display_options['fields']['dg_creators_s']['id'] = 'dg_creators_s';
-  $handler->display->display_options['fields']['dg_creators_s']['table'] = 'islandora_solr';
-  $handler->display->display_options['fields']['dg_creators_s']['field'] = 'dg_creators_s';
-  $handler->display->display_options['fields']['dg_creators_s']['label'] = '';
-  $handler->display->display_options['fields']['dg_creators_s']['exclude'] = TRUE;
-  $handler->display->display_options['fields']['dg_creators_s']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['dg_creators_s']['link_to_object'] = 0;
+  // Field: Islandora Solr: mods_extension_creators_ss
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['id'] = 'mods_extension_creators_ss';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['table'] = 'islandora_solr';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['field'] = 'mods_extension_creators_ss';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['label'] = '';
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['exclude'] = TRUE;
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['mods_extension_creators_ss']['link_to_object'] = 0;
   // Field: Islandora Solr: fgs_label_s
   $handler->display->display_options['fields']['fgs_label_s']['id'] = 'fgs_label_s';
   $handler->display->display_options['fields']['fgs_label_s']['table'] = 'islandora_solr';
@@ -331,7 +331,7 @@ function dg7_views_default_views( ) {
   $handler->display->display_options['fields']['PID']['field'] = 'PID';
   $handler->display->display_options['fields']['PID']['label'] = '';
   $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[dg_creators_s]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
   $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
 
@@ -760,7 +760,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
   }
 
   // Now, set the sort order.  Note that sort should be a csv string, not an array!
-  $isq->solrParams['sort'] = 'dg_primarySort_s asc';  // everything sorts by dg_primarySort_s first!
+  $isq->solrParams['sort'] = 'mods_extension_primarySort_ss asc';  // everything sorts by mods_extension_primarySort_ss first!
 
   switch ($collection) {
 
@@ -768,7 +768,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     case 'grinnell:alumni-oral-histories':  // Alumni Oral Histories
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
-      $isq->solrParams['sort'] .= ', dg_hidden_creators_s asc';
+      $isq->solrParams['sort'] .= ', mods_extension_hidden_creators_ss asc';
       break;
 
     // Sort by date then label.
@@ -797,7 +797,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:recent-art-acquisitions':  // The Faulconer's Recent Acquisitions sub-collection
     case 'grinnell:faulconer-suppressed':
     case 'grinnell:studio-student-art':       // Studio Student Art sub-collection
-      $isq->solrParams['sort'] .= ', dg_creators_s asc';
+      $isq->solrParams['sort'] .= ', mods_extension_creators_ss asc';
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
@@ -2072,7 +2072,8 @@ function dg7_permission() {
 
 
 /**
- * Generate a simple view of an object's OCR or FULL_TEXT datastream.
+ * Generate a simple view of an object's OCR or FULL_TEXT datastream, OR write the datastream to
+ * a text file for review.
  *
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
  * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
@@ -2080,11 +2081,12 @@ function dg7_permission() {
  * @param $pid
  *   The target Fedora object PID
  * @param $tabToCopy
- *   The page tab structure where the "View OCR" button is to be placed.
+ *   The page tab structure where the "View OCR" button is to be placed, or if NULL (as when
+ *   called from Drush), divert the datastream text to a file for review.
  * @return bool|array|integer
  *
  */
-function dg7_controls_view_OCR($pid, $tabToCopy) {
+function dg7_controls_view_OCR($pid, $tabToCopy=NULL) {
 
   // Retrieve the target Fedora object or return FALSE if there is none.
   if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
@@ -2111,19 +2113,70 @@ function dg7_controls_view_OCR($pid, $tabToCopy) {
 
   // If we have a viewable datastream ($target)...
   // Copy the $tabToCopy structure to make a new button and give it attributes necessary
-  // to carry out the cover sheet function.
+  // to carry out the cover sheet function OR, if $tabToCopy is NULL, write the text contents
+  // of the datastream to //Storage
 
-  if ($target) {
-    $tab = $tabToCopy;
-    unset($tab['#link']);
-    $tab['#link']['title'] = "View OCR";
-    $url = base_path() . "islandora/object/$pid/datastream/$target/view";
-    $tab['#link']['href'] = request_path();
-    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a new window!
-    return $tab;
+  if (!$target) { return FALSE; }
+
+  /* Write the datastream to a file for review
+  if (is_null($tabToCopy)) {
+    $dir = "/LIBRARY/LIBSTU/DG_OCR_Files/Pending_Review";
+    list($ns, $pidn) = explode(':', $pid);
+    $file = $ns . "_" . $pidn . "." . $target . ".txt";
+    $path = $dir . "/" . $file;
+
+    $conn_id = ssh2_connect('132.161.10.13', 22);
+    if ($conn_id) {
+      ssh2_auth_password($conn_id, 'libstu', '17Fa**18');
+      $sftp = ssh2_sftp($conn_id);
+    }
+    else {
+      watchdog( 'dg7', "ssh2_connect failed so no file transfer is possible.");
+      return FALSE;
+    }
+  }
+
+  $fpath = $sftp . $path;
+  if (!$fp = fopen("ssh2.sftp://$fpath", 'b')) {
+    watchdog('dg7', "Could not open remote file '%filepath' for writting.", array('%filepath' => $path), WATCHDOG_ERROR);
+    return FALSE;
+  } */
+
+  /*
+  try {
+    $fp = fopen("$path", "w+");
+  } catch (Exception $e) {
+    drupal_set_message("Could not open $path.  Exception is: '$e'.", 'error');
+    return FALSE;
+  } */
+
+  /*
+  $content = $fedora_object[$target]->content;
+
+  if ($fp) {
+    try {
+      $return = fwrite($fp, $content);
+    } catch (Exception $e) {
+      drupal_set_message("Could not write $target datastream from $pid to $path.  Exception: '$e'", 'error');
+      return FALSE;
+    }
+
+    drupal_set_message("$target datastream (size = $return) successfully written from $pid to $path.", 'status');
+    fclose($fp);
+    return TRUE;
   } else {
     return FALSE;
-  }
+  } */
+
+  // Make a View_OCR button.
+  $tab = $tabToCopy;
+  unset($tab['#link']);
+  $url = base_path() . "islandora/object/$pid/datastream/$target/view";
+  $tab['#link']['title'] = "View OCR";
+  $tab['#link']['href'] = request_path();
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a ew window!
+  return $tab;
+
 }
 
 /**
