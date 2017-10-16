@@ -32,6 +32,13 @@ define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollectio
  */
 function list_view_handler( $pid, $collection, &$view ) {
 
+  // On DGAdmin ONLY, append "/manage" to all tile links.
+  if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') {
+    $manage = "/manage";
+  } else {
+    $manage = "";
+  }
+
   $handler = $view->new_display('page', $collection['title'], $pid);
   $handler->display->display_options['defaults']['header'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'default';
@@ -96,7 +103,7 @@ function list_view_handler( $pid, $collection, &$view ) {
   $handler->display->display_options['fields']['PID']['field'] = 'PID';
   $handler->display->display_options['fields']['PID']['label'] = '';
   $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><h3><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></h3></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]' . $manage . '"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><h3><a href="/islandora/object/[PID]' . $manage . '" title="[fgs_label_s]">[fgs_label_s]</a></h3></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div></div><hr />';
   $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
@@ -115,6 +122,13 @@ function list_view_handler( $pid, $collection, &$view ) {
  *  Handler code for collection 'grid' views in hook_view_default_views_alter (below).
  */
 function grid_view_handler( $pid, $collection, &$view ) {
+
+  // On DGAdmin ONLY, append "/manage" to all tile links.
+  if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') {
+    $manage = "/manage";
+  } else {
+    $manage = "";
+  }
 
   if (!isset($collection['title'])) { drupal_set_message("Collection title is missing for $pid", 'warning'); }
   if (!isset($collection['id'])) { drupal_set_message("Collection ID (id) is missing for $pid", 'warning'); }
@@ -206,7 +220,7 @@ jQuery( window ).resize(function() {
   $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
   $handler->display->display_options['fields']['TN Image']['label'] = '';
   $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a class="collection-tile-text" href="/islandora/object/[PID]"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
+  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a class="collection-tile-text" href="/islandora/object/[PID]' . $manage . '"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
   $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
@@ -218,6 +232,14 @@ jQuery( window ).resize(function() {
   $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
   $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $pid;
   $handler->display->display_options['path'] = 'islandora/object/' . $pid;
+
+  /* On DGAdmin append "/manage" to the path.  Don't do this on DG!
+  if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') {
+    $handler->display->display_options['path'] = 'islandora/object/' . $pid . "/manage";
+  } else {
+    $handler->display->display_options['path'] = 'islandora/object/' . $pid;
+  }
+  */
 
   return $view;
 }
@@ -233,15 +255,22 @@ jQuery( window ).resize(function() {
  */
 function dg7_views_default_views( ) {
 
-  $maintenance = variable_get('maintenance_mode', 0);
-  if (!$maintenance) {  // site is NOT in maintenance mode...do nothing here!
-    watchdog('dg7','dg7_views_default_views has been called but the site is NOT in maintenance mode so the views will NOT be updated.', NULL,WATCHDOG_NOTICE);
+  $update = variable_get('update_dg7_collection_view', 0);
+  if (!$update) {  // update_dg7_collection_view is NOT set...do nothing here!
+    watchdog('dg7','dg7_views_default_views has been called but update_dg7_collection_view is NOT set so the views will NOT be updated.', NULL,WATCHDOG_NOTICE);
     return;
   } else {
-    $msg = 'dg7_views_default_views has been called in MAINTENANCE MODE so views WILL be updated.';
+    $msg = 'dg7_views_default_views has been called with update_dg7_collection_view so views WILL be updated.  Make sure you turn this variable off soon!';
     watchdog('dg7',$msg, NULL,WATCHDOG_NOTICE);
     drupal_set_message($msg);
-    drupal_set_message("Note that you MUST alter the new dg7_collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.", 'warning');
+    drupal_set_message("Note that you MUST alter the new dg7_Collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.  Do NOT delete the existing dg7_Collection view!", 'warning');
+  }
+
+  // On DGAdmin ONLY, append "/manage" to all tile links.
+  if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') {
+    $manage = "/manage";
+  } else {
+    $manage = "";
   }
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
@@ -331,7 +360,7 @@ function dg7_views_default_views( ) {
   $handler->display->display_options['fields']['PID']['field'] = 'PID';
   $handler->display->display_options['fields']['PID']['label'] = '';
   $handler->display->display_options['fields']['PID']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
+  $handler->display->display_options['fields']['PID']['alter']['text'] = '<div class="wrapper"><div class="left"><a href="/islandora/object/[PID]' . $manage . '"><img src="/islandora/object/[PID]/datastream/TN/view" title="[fgs_label_s]" alt="[PID]"></a></div><div class="right"><div id="collection-view_teaser-creators" class="collection-value">[mods_extension_creators_ss]</div><div id="collection-view-teaser-title" class="collection-value"><a href="/islandora/object/[PID]' . $manage . '" title="[fgs_label_s]">[fgs_label_s]</a></div><div id="collection-view-teaser-abstract" class="collection-value">[mods_abstract_ms]</a></div><div id="collection-view-teaser-pull-quote" class="collection-value">[mods_extension_pull_quote_ms]</a></div></div><hr />';
   $handler->display->display_options['fields']['PID']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
 
@@ -2118,55 +2147,61 @@ function dg7_controls_view_OCR($pid, $tabToCopy=NULL) {
 
   if (!$target) { return FALSE; }
 
-  /* Write the datastream to a file for review
+  // Write the datastream to a file for review
   if (is_null($tabToCopy)) {
     $dir = "/LIBRARY/LIBSTU/DG_OCR_Files/Pending_Review";
     list($ns, $pidn) = explode(':', $pid);
     $file = $ns . "_" . $pidn . "." . $target . ".txt";
     $path = $dir . "/" . $file;
 
-    $conn_id = ssh2_connect('132.161.10.13', 22);
-    if ($conn_id) {
+    $host = '132.161.10.13';
+    $port = '22';
+
+    $conn_id = ssh2_connect($host, $port);
+    // $conn_id = ssh2_connect($host, $port, array('hostkey' => 'ssh-rsa'));
+    if (!$conn_id) {
+      watchdog('dg7', "ssh2_connect to $host port $port failed!");
+      return FALSE;
+    } else {
+
+      /*
+      if (!ssh2_auth_pubkey_file($conn_id, 'libstu',
+        '/home/vagrant/.ssh/id_rsa.pub',
+        '/home/vagrant/id_rsa')) {
+        die('libstu public key authentication failed!');
+      } */
+
       ssh2_auth_password($conn_id, 'libstu', '17Fa**18');
       $sftp = ssh2_sftp($conn_id);
-    }
-    else {
-      watchdog( 'dg7', "ssh2_connect failed so no file transfer is possible.");
-      return FALSE;
+
+      // The following lifted from a comment in http://php.net/manual/en/function.ssh2-scp-send.php
+      $stream = 'ssh2.sftp://' . intval($sftp) . $path;
+      $sftpStream = @fopen($stream, 'w+');
+
+      try {
+        if (!$sftpStream) {
+          throw new Exception("Could not open remote file $path for $target from $pid.");
+        }
+        $data_to_send = $fedora_object[$target]->content;
+        if ($data_to_send === FALSE) {
+          throw new Exception("Could not open $target from $pid to copy.");
+        }
+        if (@fwrite($sftpStream, $data_to_send) === FALSE) {
+          throw new Exception("Could not write $target from $pid to file: $path.");
+        }
+        fclose($sftpStream);
+        unset($sftp);
+        unset($conn_id);
+        sleep(2);
+        return TRUE;
+
+      } catch (Exception $e) {
+        watchdog('dg7', 'ssh2.sftp Exception: ' . $e->getMessage());
+        if ($sftpStream) { fclose($sftpStream); }
+        die("Process terminated due to exception on object '$pid'.");
+      }
     }
   }
-
-  $fpath = $sftp . $path;
-  if (!$fp = fopen("ssh2.sftp://$fpath", 'b')) {
-    watchdog('dg7', "Could not open remote file '%filepath' for writting.", array('%filepath' => $path), WATCHDOG_ERROR);
-    return FALSE;
-  } */
-
-  /*
-  try {
-    $fp = fopen("$path", "w+");
-  } catch (Exception $e) {
-    drupal_set_message("Could not open $path.  Exception is: '$e'.", 'error');
-    return FALSE;
-  } */
-
-  /*
-  $content = $fedora_object[$target]->content;
-
-  if ($fp) {
-    try {
-      $return = fwrite($fp, $content);
-    } catch (Exception $e) {
-      drupal_set_message("Could not write $target datastream from $pid to $path.  Exception: '$e'", 'error');
-      return FALSE;
-    }
-
-    drupal_set_message("$target datastream (size = $return) successfully written from $pid to $path.", 'status');
-    fclose($fp);
-    return TRUE;
-  } else {
-    return FALSE;
-  } */
 
   // Make a View_OCR button.
   $tab = $tabToCopy;
