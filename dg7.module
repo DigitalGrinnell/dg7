@@ -1882,6 +1882,9 @@ function dg7_islandora_view_object() {
  */
 function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $drush=FALSE) {
 
+  // Convert any PID %3a substring to a colon.
+  $pid = str_replace('%3a',':', $pid);
+
   // Retrieve the target Fedora object or return FALSE if there is none.
   if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
 
