@@ -34,22 +34,24 @@ define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollectio
  *
  * The view defined here is "Collection" exported from Digital on 16-August-2017.
  *
- * Important!!!  You must set the variable update_dg7_collection_view to TRUE (use
- *   'drush vset update_dg7_collection_view 1') before any update will be applied!  Then
- *   you need to remember to turn it off when you are done.
+ * Important!!!  You must put the site into MAINTENANCE MODE then delete the existing dg7_collection
+ *   view from /admin/structure/views in order to trigger re-generation of a new dg7_collection view!  Then
+ *   you MUST follow-up by editing and saving the new view to secure it in the database.
  *
  */
 function dg7_views_default_views( ) {
 
-  $update = variable_get('update_dg7_collection_view', 0);
-  if (!$update) {  // update_dg7_collection_view is NOT set...do nothing here!
-    watchdog('dg7','dg7_views_default_views has been called but update_dg7_collection_view is NOT set so the views will NOT be updated.', NULL,WATCHDOG_NOTICE);
+  $view = views_get_view('dg7_collection');
+  $update = (!$view && variable_get('maintenance_mode', 0));
+
+  if (!$update) {  // call is not from within maintenance mode...do nothing here!
+    watchdog('dg7','dg7_views_default_views has been called but not in MAINTENANCE MODE, or dg7_collection already exists, so the view will NOT be updated.', NULL,WATCHDOG_NOTICE);
     return;
   } else {
-    $msg = 'dg7_views_default_views has been called with update_dg7_collection_view so views WILL be updated.  Make sure you turn this variable off soon!';
+    $msg = 'dg7_views_default_views has been called in MAINTENANCE MODE and dg7_collection does not exist so it will be created.';
     watchdog('dg7',$msg, NULL,WATCHDOG_NOTICE);
     drupal_set_message($msg);
-    drupal_set_message("Note that you MUST alter the new dg7_Collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.  Do NOT delete the existing dg7_Collection view!", 'warning');
+    drupal_set_message("Note that you MUST alter the new dg7_Collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.  Do NOT delete the existing dg7_Collection view again unless you want to force an update from this code in MAINTENACE MODE!", 'warning');
   }
 
   // On DGAdmin ONLY, append "/manage" to all tile links.
@@ -795,6 +797,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
 
     case 'grinnell:phpp':                   // The Poweshiek History Preservation Project
     case 'grinnell:college-history':        // The Early College History collection
+    case 'grinnell:college-handbooks':      // The College Handbooks collection
     case 'grinnell:jimmy-ley':              // The Jimmy Ley Collection
     case 'grinnell:gwcc':                   // The George Washington Cook Correspondence
     case 'grinnell:postcards':              // Historic Iowa Postcards
@@ -1134,6 +1137,9 @@ return; */
  */
 function dg7_controls_add_an_annotation($pid, $tabToCopy) {
   module_load_include('inc', 'csl', 'CSL');
+
+  // Annotations only work on Digital, not DGAdmin!
+  // if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') { return FALSE; }
 
   // Retrieve the target Fedora object or return FALSE if there is none.
   if (!$fedora_object = islandora_object_load($pid)) { return FALSE; }
@@ -1861,17 +1867,18 @@ function dg7_islandora_view_object() {
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
  * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
  *
+ * If called from drush, then existing datastreams will be replaced with new ones
+ *  and no "Cover Sheet" tab will be generated.
+ *
  * @param $pid
  *   The target Fedora object PID
  * @param $tabToCopy
  *   The page tab structure where the "Cover Sheet" button is to be placed.
- * @param $drush bool
- *   If true (called from drush) then existing datastreams will be replaced with new ones
- *     and no "Cover Sheet" tab will be generated.
  * @return bool|array|integer
  *
  */
-function dg7_controls_printable_cover_sheet($pid, $tabToCopy, $drush=FALSE) {
+function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
+  $drush = drupal_is_cli();
 
   // Convert any PID %3a substring to a colon.
   $pid = str_replace('%3a',':', $pid);
