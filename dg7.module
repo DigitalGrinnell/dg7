@@ -1163,7 +1163,8 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
   unset($tab['#link']);
   $tab['#link']['title'] = "Add an Annotation";
   $tab['#link']['href'] = request_path( );
-  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenTranscriptionWindow('$url')";
+//$tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenTranscriptionWindow('$url')";
+  $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";
   return $tab;
 }
 
