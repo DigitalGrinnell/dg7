@@ -3,6 +3,6 @@
  */
 
 function dg7NewWindow(address) {
-    window.open( address, "_blank", "scrollbars=1,toolbar=0,location=0,menubar=0,resizable=1,width=820,height=900" );
+    window.open( address, "_blank", "scrollbars=1,toolbar=0,location=0,menubar=0,resizable=1,width=850,height=900" );
     return false;
 };

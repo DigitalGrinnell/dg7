@@ -265,58 +265,51 @@ function grid_view_handler( $pid, $collection, &$view, $manage ) {
   $handler->display->display_options['display_description'] = "This is a new page view specifically for the " . $collection['description'] . " and its immediate subordinates.";
   $handler->display->display_options['defaults']['style_plugin'] = FALSE;
   $handler->display->display_options['style_plugin'] = 'views_bootstrap_thumbnail_plugin_style';
-  $handler->display->display_options['style_options']['columns'] = '3';
+  $handler->display->display_options['style_options']['columns_horizontal'] = '-1';
+  $handler->display->display_options['style_options']['columns_vertical'] = '4';
+  $handler->display->display_options['style_options']['clear_columns'] = FALSE;
+  $handler->display->display_options['style_options']['columns_xs'] = '12';
+  $handler->display->display_options['style_options']['columns_sm'] = '12';
+  $handler->display->display_options['style_options']['columns_md'] = '6';
+  $handler->display->display_options['style_options']['columns_lg'] = '4';
   $handler->display->display_options['pager']['options']['items_per_page'] = '12';
   $handler->display->display_options['defaults']['style_options'] = FALSE;
   $handler->display->display_options['defaults']['row_plugin'] = FALSE;
   $handler->display->display_options['row_plugin'] = 'fields';
   $handler->display->display_options['defaults']['row_options'] = FALSE;
   $handler->display->display_options['defaults']['header'] = FALSE;
-  // Header: Global: Text area
+  /* Header: Global: Text area */
   $handler->display->display_options['header']['area']['id'] = 'area';
   $handler->display->display_options['header']['area']['table'] = 'views';
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
-
+  
 function lastRow() {  
   var lastRowDesktop = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 3;
   var lastRowTablet = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 2;
-  if (
-    (lastRowDesktop == 1 && lastRowTablet == 1) || 
-    (lastRowDesktop == 0 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) || 
-    (lastRowDesktop == 1 && lastRowTablet == 0 && jQuery(\'.device-lg\').is(\':visible\')) 
-  ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
+  if (lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).addClass(\'col-md-offset-3\');
   }
-  else if (
-    (lastRowDesktop == 2 && lastRowTablet == 0) ||
-    (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-lg\').is(\':visible\'))
-    ) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-2).wrapAll(\'<div class="last-row"></div>\');
+  else if (lastRowDesktop == 2 && jQuery(\'.device-lg\').is(\':visible\')) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-2, -1).addClass(\'col-lg-offset-2\');
   }
-  else if (lastRowDesktop == 2 && lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
-   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).wrapAll(\'<div class="last-row"></div>\');
+  else if (lastRowDesktop == 1 && jQuery(\'.device-lg\').is(\':visible\')) {
+   jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().slice(-1).addClass(\'col-lg-offset-4\');
   }
 }
 
 jQuery(document).ready(function() {
-  jQuery(\'#views-bootstrap-thumbnail-1 .col-lg-4\').addClass(\'col-md-6\');
-  jQuery(\'#views-bootstrap-thumbnail-1 .row\').contents().unwrap();
-  jQuery(\'#views-bootstrap-thumbnail-1\').wrapInner(\'<div class="row"></div>\');
   lastRow();
   jQuery(\'#views-bootstrap-thumbnail-1 img\').addClass(\'img-responsive\');
   jQuery(\'#edit-terms-0-field\').val(\'catch_all_fields_mt\');
-  if (jQuery(\'[id^=block-views-collection-block]\').length != 0) {
-    //do something here to hide the non-block view
-    jQuery(\'.view-display-id-block\').hide();
-  }
 });
 
 jQuery( window ).resize(function() {
-  jQuery(\'.last-row\').contents().unwrap();  
+  jQuery(\'div\').removeClass(\'col-md-offset-3 col-lg-offset-2 col-lg-offset-4 \');  
   lastRow();
 });
+  
 </script>
 <div class="intro-text intro-text-no-form">
 <h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">' . $collection['banner'] . '</h1>
@@ -1158,19 +1151,20 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
   // Build the destination path ($url) here, then drupal_goto below.
   $url = "/islandora_webform/retrieve_form/$webform/nojs?pid=$pid&destination=islandora/object/$pid";
 
-  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to carry out the annotation function.
+  // Copy the $tabToCopy structure to make a new button and give it attributes necessary to
+  // carry out the annotation function.
   $tab = $tabToCopy;
   unset($tab['#link']);
   $tab['#link']['title'] = "Add an Annotation";
   $tab['#link']['href'] = request_path( );
-//$tab['#link']['localized_options']['attributes']['onClick'] = "dg7OpenTranscriptionWindow('$url')";
   $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";
   return $tab;
 }
 
 
 /**
- * Prints a line of AWSTATS information about a specified object in the $tabs2 space just below the custom buttons.
+ * Prints a line of AWSTATS information about a specified object in the $tabs2 space
+ * just below the custom buttons.
  *
  * This function is called from the theme function 'Digital_Grinnell_preprocess_page' found in
  * ..sites/default/themes/Digital Grinnell/drupal7_theme_methods.php.
