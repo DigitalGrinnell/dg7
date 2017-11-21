@@ -564,6 +564,11 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
       dg7_islandora_solr_advanced_search_form_alter_helper($form);
       break;
 
+    // islandora_multi_importer_form
+    case 'islandora_multi_importer_form':
+      islandora_multi_importer_form_restore_selections($form);
+      break;
+
   }
 
   return;
@@ -2261,7 +2266,7 @@ function dg7_islandora_multi_importer_remote_file_get($url, $pid=NULL) {
 
   // Assumes the file is somewhere in the public://imi_files path
   $basename = drupal_basename($parsed_url['path']);
-  $pattern = "/$basename/";
+  $pattern = "/" . preg_quote($basename) . "/";
   $options['key'] = 'filename';
   $file = file_scan_directory("public://imi_files/", $pattern, $options);
   if (empty($file)) {
