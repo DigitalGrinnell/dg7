@@ -1224,7 +1224,6 @@ function dg7_print_awstats($pid) {
  *                   3) number of DG6 downloads, and 4) number of DG7 downloads.
  */
 function dg7_return_awstats($pid) {
-  module_load_include('inc', 'icu', 'object_record');
   if (is_null($pid) || stripos($pid, ':') < 2) { return array(0, 0, 0, 0); }
 
   // OK, collect the data.
