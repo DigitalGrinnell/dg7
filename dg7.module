@@ -1163,6 +1163,7 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
   unset($tab['#link']);
   $tab['#link']['title'] = "Add an Annotation";
   $tab['#link']['href'] = request_path( );
+  $tab['#link']['localized_options']['attributes']['id'] = "dg_annotation_button";
   $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";
   return $tab;
 }
@@ -1967,7 +1968,8 @@ function dg7_controls_printable_cover_sheet($pid, $tabToCopy) {
     $tab['#link']['title'] = "Cover Sheet";   // MAM...shortened the button label on 20-Oct-2015
     $url = base_path() . "islandora/object/$pid/datastream/$viewDS/view";
     $tab['#link']['href'] = request_path();
-    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a new window!
+    $tab['#link']['localized_options']['attributes']['id'] = "dg_coversheet_button";
+    $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open s a new window!
     return $tab;
   } else {
     return FALSE;
@@ -2210,6 +2212,7 @@ function dg7_controls_view_OCR($pid, $tabToCopy=NULL) {
   $url = base_path() . "islandora/object/$pid/datastream/$target/view";
   $tab['#link']['title'] = "View OCR";
   $tab['#link']['href'] = request_path();
+  $tab['#link']['localized_options']['attributes']['id'] = "dg_ocr_button";
   $tab['#link']['localized_options']['attributes']['onClick'] = "dg7NewWindow('$url')";  // This option is key to making this open as a ew window!
   return $tab;
 
