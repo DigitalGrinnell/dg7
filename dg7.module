@@ -183,7 +183,7 @@ function list_view_handler( $pid, $collection, &$view, $manage ) {
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<div class="intro-text intro-text-no-form">
-<h1 style="text-align: center; margin-top: 0px; margin-bottom: 20px">'. $collection['label'] . '</h1><p>' . $collection['abstract'] . '</p></div>';
+<h1 style="text-align: center; margin-top: 0px; margin-bottom: 20px">'. $collection['label'] . '</h1><p class="collection-banner-text">' . $collection['abstract'] . '</p></div>';
   $handler->display->display_options['header']['area']['format'] = 'php_code';
   $handler->display->display_options['defaults']['fields'] = FALSE;
   // No results behavior: Global: Text area
@@ -313,7 +313,7 @@ jQuery( window ).resize(function() {
 </script>
 <div class="intro-text intro-text-no-form">
 <h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">' . $collection['banner'] . '</h1>
-<p>' . $collection['abstract'] . '</p></div><h2 style="margin-top: 25px;">Browse by Collection</h2>';
+<p class="collection-banner-text">' . $collection['abstract'] . '</p></div><h2 style="margin-top: 25px;">Browse by Collection</h2>';
 
   $handler->display->display_options['header']['area']['format'] = 'php_code';
   $handler->display->display_options['defaults']['footer'] = FALSE;
@@ -340,7 +340,7 @@ jQuery( window ).resize(function() {
   $handler->display->display_options['fields']['TN Image']['field'] = 'TN Image';
   $handler->display->display_options['fields']['TN Image']['label'] = '';
   $handler->display->display_options['fields']['TN Image']['alter']['alter_text'] = TRUE;
-  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a class="collection-tile-text" href="/islandora/object/[PID]' . $manage . '"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
+  $handler->display->display_options['fields']['TN Image']['alter']['text'] = '<a class="collection-tile-text" id="grid_"[PID] href="/islandora/object/[PID]' . $manage . '"><div class="views-field-TN-Image"><img src="/islandora/object/[PID]/datastream/TN/view" alt="[fgs_label_s]"/></div><h3 class="collection-tile">[fgs_label_s]</h3></a>';
   $handler->display->display_options['fields']['TN Image']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['TN Image']['element_default_classes'] = FALSE;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
