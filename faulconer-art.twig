@@ -1,0 +1,193 @@
+{# faulconer-art.twig #}
+
+{% block content %}
+  {% autoescape false %}
+
+  {# Construct some variables... #}
+
+  {# Define these OUTSIDE of all for... loops so they persist! #}
+  {% set value = '' %}
+  {% set creators = '' %}
+  {% set title = '' %}
+  {% set indexDate = '' %}
+  {% set creditLine = '' %}
+  {% set medium = '' %}
+  {% set extent = '' %}
+  {% set handle = '' %}
+  {% set local = '' %}
+  {% set isPartOf = '' %}
+  {% set role = '' %}
+  {% set nationality = '' %}
+  {% set location = '' %}
+
+  {# Location...only for Admins!  Use 'hasAdminAccess is defined' to determine if this is for an admin! #}
+  {% for item in relatedItem %}
+    {% if hasAdminAccess is defined and item['@type'] == 'admin' %}
+      {% for n in item['note'] %}
+        {% if n['@type'] == 'location' %}
+          {% set location = location ~ n['$']|trim ~ "<br/>" %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+
+  {# Creator names...  Only choose namePart values that are NOT iterable (have no attributes) #}
+  {% for n in name %}
+    {% for p in n['namePart'] %}
+      {% if p['@type'] is not defined %}
+        {% set value = p['$']|trim %}
+        {# value: {{ value }}<br/> #}
+        {% set break = false %}
+        {% for r in n['role'] if not break %}
+          {# r[roleTerm]: {{ r['roleTerm']['$'] }}<br/> #}
+          {% if r['roleTerm']['$'] == 'artist' or r['roleTerm']['$'] == 'creator' %}
+            {% set creators = creators ~ ' ' ~ value ~ ';' %}
+            {# creators: {{ creators }}<br/> #}
+            {% set break = true %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+  {% set creators = creators|trim(';') %}
+
+  {# Title... #}
+  {% for t in titleInfo %}
+    {% if t['@type'] is not defined %}
+      {% set title = t['title']['$']|trim %}
+    {% endif %}
+  {% endfor %}
+
+  {# Credit Line... #}
+  {% for n in note %}
+    {% if n['@type'] == 'credits' %}
+      {% set creditLine = creditLine ~ n['$']|trim ~ '<br/>' %}
+    {% endif %}
+  {% endfor %}
+
+  {# Extent... #}
+  {% for x in physicalDescription['extent'] %}
+    {% set extent = extent ~ x['$']|trim ~ '<br/>' %}
+  {% endfor %}
+
+  {# Publisher...
+  {% if originInfo['publisher'] %}
+    {% set publisher = originInfo['publisher']['$']|trim %}
+  {% endif %}  #}
+
+  {# Genre...
+  {% if genre %}
+    {% set gen = genre['$']|trim %}
+  {% endif %}  #}
+
+  {# Index Date... #}
+  {% if originInfo['dateCreated'] %}
+    {% set indexDate = originInfo['dateCreated']['$']|trim %}
+  {% endif %}
+
+  {# Medium... #}
+  {% if physicalDescription['form'] %}
+    {% set medium = physicalDescription['form']['$']|trim %}
+  {% endif %}
+
+  {# Nationality... #}
+  {% for s in subject %}
+    {% for t in s['topic'] %}
+      {% if t['@displayLabel'] == 'nationality' %}
+        {% set nationality = nationality ~ t['$']|trim ~ '<br/>' %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+
+  {# Handle and Local identifiers... #}
+  {% for id in identifier %}
+    {% if id['@type'] == 'hdl' %}
+      {% set handle = id['$']|trim %}
+    {% elseif id['@type'] == 'local' %}
+      {% set local = id['$']|trim %}
+    {% endif %}
+  {% endfor %}
+
+  {# relatedItems isPartOf list...
+  {% for item in relatedItem %}
+    {% for k,v in item %}
+      {% if v == 'isPartOf' %}
+        {% set isPartOf = isPartOf ~ item['titleInfo'][0]['title']['$']|trim ~ "<br/>" %}
+      {% endif %}
+    {% endfor %}
+  {% endfor %}   #}
+
+  {# Now build the HTML page #}
+
+  <html>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <head>
+      <style type="text/css">
+        body { margin-left: 10px; font-size: 14px; }
+        p.indented { display:block; margin-left:20px; }
+        table { border-collapse: collapse;  width: 90%; }
+        td { vertical-align: top; font-weight: bold; }
+        td.heading { font-size: 14px; font-weight: normal; }
+        h1 { font-size: 18px; font-weight: bold; }
+        img { display: block; height: 65px; }
+      </style>
+    </head>
+
+    <body>
+
+      <img src="/sites/default/modules/dg7/dgCoverSheetLogo.png"/>
+
+      <p>
+        This work is part of the Digital Grinnell collection at Grinnell College, Grinnell, Iowa.<br/>
+        Find this and additional works at: <a href='https://digital.grinnell.edu/'
+          target='_blank'>https://digital.grinnell.edu/</a>
+      </p>
+
+      <h1>{{ title }}</h1>
+
+      <table>
+        {% if creators is not null and creators is not empty %}
+          <tr><td class="heading">Artist: </td><td>{{ creators }}</td></tr>
+        {% endif %}
+        {% if nationality is not null and nationality is not empty %}
+          <tr><td class="heading">Nationality: </td><td>{{ nationality }}</td></tr>
+        {% endif %}
+        {% if indexDate is not null and indexDate is not empty %}
+          <tr><td class="heading">Date: </td><td>{{ indexDate }}</td></tr>
+        {% endif %}
+        {% if abstract is not null and abstract is not empty %}
+          <tr><td class="heading">Abstract: </td><td>{{ abstract }}</td></tr>
+        {% endif %}
+        {% if medium is not null and medium is not empty %}
+          <tr><td class="heading">Medium: </td><td>{{ medium }}</td></tr>
+        {% endif %}
+        {% if extent is not null and extent is not empty %}
+          <tr><td class="heading">Dimensions: </td><td>{{ extent }}</td></tr>
+        {% endif %}
+        {% if creditLine is not null and creditLine is not empty %}
+          <tr><td class="heading">Credit Line: </td><td>{{ creditLine }}</td></tr>
+        {% endif %}
+        {% if local is not null and local is not empty %}
+          <tr><td class="heading">Accession Number: </td><td>{{ local }}</td></tr>
+        {% endif %}
+        {% if hasAdminAccess is defined and location is not null and location is not empty %}
+          <tr><td class="heading">Location: </td><td>{{ location }}</td></tr>
+        {% endif %}
+
+      </table>
+
+      {% if hasAdminAccess is defined %}
+        <p>Note that this page was prepared for ADMIN USE ONLY!  It may contain confidential/protected data!</p>
+      {% endif %}
+
+      <p style="clear:both; font:italic normal 8px Georgia, serif; color:gray; text-align:right; margin-right:20px">
+        Cover sheet design by Grinnell College Libraries
+      </p>
+
+    </body>
+
+  </html>
+
+  {% endautoescape %}
+{% endblock %}
