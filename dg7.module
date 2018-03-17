@@ -242,11 +242,11 @@ function list_view_handler( $pid, $collection, &$view, $manage ) {
   $handler->display->display_options['fields']['PID']['link_to_object'] = 0;
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
   $handler->display->display_options['defaults']['filters'] = FALSE;
-  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $pid;
+  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms   Do NOT use isMemberOfCollection_uri_s as it's single-valued.
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/' . $pid;
   $handler->display->display_options['path'] = 'islandora/object/' . $pid;
 
   return $view;
@@ -284,8 +284,8 @@ function grid_view_handler( $pid, $collection, &$view, $manage ) {
   $handler->display->display_options['header']['area']['field'] = 'area';
   $handler->display->display_options['header']['area']['empty'] = TRUE;
   $handler->display->display_options['header']['area']['content'] = '<script type="text/javascript">
-  
-function lastRow() {  
+
+function lastRow() {
   var lastRowDesktop = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 3;
   var lastRowTablet = jQuery(\'#views-bootstrap-thumbnail-1 .row\').children().length % 2;
   if (lastRowTablet == 1 && jQuery(\'.device-md\').is(\':visible\')) {
@@ -306,10 +306,10 @@ jQuery(document).ready(function() {
 });
 
 jQuery( window ).resize(function() {
-  jQuery(\'div\').removeClass(\'col-md-offset-3 col-lg-offset-2 col-lg-offset-4 \');  
+  jQuery(\'div\').removeClass(\'col-md-offset-3 col-lg-offset-2 col-lg-offset-4 \');
   lastRow();
 });
-  
+
 </script>
 <div class="intro-text intro-text-no-form">
 <h1 style="text-align: center; margin-top:0px; margin-bottom:20px;">' . $collection['banner'] . '</h1>
@@ -346,11 +346,11 @@ jQuery( window ).resize(function() {
   $handler->display->display_options['defaults']['filter_groups'] = FALSE;
   $handler->display->display_options['defaults']['filters'] = FALSE;
   // Sort criterion has been removed so that Solr queries control the order.
-  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_s
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['id'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['table'] = 'islandora_solr';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['field'] = 'RELS_EXT_isMemberOfCollection_uri_s';
-  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_s']['value'] = 'info:fedora/' . $pid;
+  // Filter criterion: Islandora Solr: RELS_EXT_isMemberOfCollection_uri_ms
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['id'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['table'] = 'islandora_solr';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['field'] = 'RELS_EXT_isMemberOfCollection_uri_ms';
+  $handler->display->display_options['filters']['RELS_EXT_isMemberOfCollection_uri_ms']['value'] = 'info:fedora/' . $pid;
   $handler->display->display_options['path'] = 'islandora/object/' . $pid;
 
   /* On DGAdmin append "/manage" to the path.  Don't do this on DG!
@@ -1225,6 +1225,7 @@ function dg7_print_awstats($pid) {
  *                   3) number of DG6 downloads, and 4) number of DG7 downloads.
  */
 function dg7_return_awstats($pid) {
+  module_load_include('inc', 'icu', 'object_record');
   if (is_null($pid) || stripos($pid, ':') < 2) { return array(0, 0, 0, 0); }
 
   // OK, collect the data.
