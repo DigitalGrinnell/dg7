@@ -2330,8 +2330,6 @@ function dg7_islandora_multi_importer_remote_file_get($url) {
  *
  * See also... https://github.com/mnylc/islandora_batch/blob/7.x-ISLANDORA-2046/includes/ingest.batch.inc#L420
  *
- *
- *
  * @param AbstractObject $ingest_object
  *   The object that has been processed for ingestion.
  * @param int $state
@@ -2339,7 +2337,74 @@ function dg7_islandora_multi_importer_remote_file_get($url) {
  *   failed ingestion.
  */
 function dg7_islandora_batch_object_processed($ingest_object, $state) {
-  // Send an email when an object fails batch processing.
+  global $user;
+  $cModels = $ingest_object->models;
+
+  if ($state === 1 && in_array("islandora:bookCModel", $cModels) && ($pdf = $ingest_object['PDF'])) {
+    $form = array(
+      'islandora_book_upload_pdf' => array(
+      'weight' => 10,
+      'type' => 'form',
+      'form_id' => 'islandora_paged_content_upload_pdf_form',
+      'args' => array('islandora:pageCModel'),
+      'module' => 'islandora_paged_content',
+      'file' => 'includes/upload_pdf.form.inc', )
+    );
+
+    $form_state = array();
+
+    // Save the $pdf datastream as an unmanaged temporary file for subsequent operations
+
+    if ($fname = drupal_tempnam('temporary://', 'imi_temp_')) {
+      $pdf->getContent($fname);
+      $uri = $fname;
+      $filename = basename($uri);
+
+      $file = new stdClass;
+      $file->uid = $user->uid;
+      $file->filename = $filename;
+      $file->uri = $uri;
+      $file->filemime = 'application/pdf';
+      $file->filesize = filesize($uri);
+      $file->status = 1;
+
+      file_save($file);
+      $form_state['values']['pdf_file'] = $file->fid;
+
+      $form_state['values']['image_format'] = 'tiff32nc';
+      $form_state['values']['resolution'] = '600';
+      $form_state['values']['language'] = 'eng';
+      $form_state['values']['extract_text'] = FALSE;
+      $form_state['values']['model'] = 'islandora:pageCModel';
+      $form_state['values']['rawtext'] = "no";
+      $form_state['values']['form_step_id'] = 'islandora_book_upload_pdf';
+      $form_state['values']['form_id'] = 'islandora_ingest_form';
+      $form_state['values']['ingest'] = 'Ingest';
+      $form_state['islandora']['objects'] = array($ingest_object);
+
+    } else {
+      $msg = "Call to file_unmanaged_save_data failed in " . __FUNCTION__ . "!  Process terminated.";
+      drupal_set_message($msg, 'error');
+      return 0;
+    }
+
+    // Submit the form to process.
+    $success = module_load_include('inc', 'islandora_paged_content', 'includes/upload_pdf.form');
+    if ($success) {
+      islandora_paged_content_upload_pdf_form_validate($form, $form_state);
+      islandora_paged_content_upload_pdf_form_submit($form, $form_state);
+    } else {
+      $msg = "Call to module_load_include for upload_pdf_.form failed in " . __FUNCTION__ . "!  Process terminated.";
+      drupal_set_message($msg, 'error');
+      return 0;
+    }
+
+    return 1;
+  }
+
+  return 0;
+
+  /* Send an email when an object fails batch processing.
   $site_email = variable_get('site_mail', '');
   if ($state === 0 && $site_email) {
     $message = drupal_mail('islandora_batch_report', 'islandora_batch_failed_ingest', $site_email, language_default(), array(), NULL, FALSE);
@@ -2352,5 +2417,6 @@ function dg7_islandora_batch_object_processed($ingest_object, $state) {
     $message = $system->format($message);
     // Send e-mail.
     $message['result'] = $system->mail($message);
-  }
+  } */
 }
+
