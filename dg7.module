@@ -68,6 +68,7 @@ function dg7_views_default_views( ) {
   $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
   $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
   $collections['grinnell:campus-collections']['banner'] = "Grinnell College Campus Collection";
+  $collections['grinnell:phpp']['banner'] = "Poweshiek History Preservation Project";
 
   // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'dg7_Collection' view.", 'info'); }
 
@@ -788,6 +789,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     // Sort by date then hidden_creators
 
     case 'grinnell:alumni-oral-histories':  // Alumni Oral Histories
+    case 'grinnell:phpp-oral-history' :     // PHPP Oral History
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', mods_extension_hidden_creators_ss asc';
       break;
@@ -795,6 +797,9 @@ function dg7_islandora_solr_query_alter(&$isq) {
     // Sort by date then label.
 
     case 'grinnell:phpp':                   // The Poweshiek History Preservation Project
+    case 'grinnell:phpp-community':         // PHPP Community Contributions
+    case 'grinnell:phpp-dcl':               // PHPP Drake Community Library Archives
+    case 'grinnell:phpp-ghm':               // PHPP Grinnell Historical Museum
     case 'grinnell:college-history':        // The Early College History collection
     case 'grinnell:college-handbooks':      // The College Handbooks collection
     case 'grinnell:jimmy-ley':              // The Jimmy Ley Collection
