@@ -1502,8 +1502,10 @@ function dg7_download_access( ) {
       }
     }
 
-    // Check to see if the objMIME type has an identifiable canonical filename extension.
-    if (!$ext = system_mime_type_extension($objMIME)) {
+    // Check to see if the objMIME type is 'application/octet-stream' or has an identifiable canonical filename extension.
+    if ($objMIME != 'application/octet-stream') {
+      return True;
+    } elseif (!$ext = system_mime_type_extension($objMIME)) {
       $msg = "Sorry, the '$objMIME' content of '$pid' cannot be downloaded.";
       drupal_set_message($msg, 'warning');
       watchdog("dg7", "$msg  The specified MIME type could not be found in the '/etc/mime.types' file.");
