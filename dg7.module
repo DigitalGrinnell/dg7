@@ -809,6 +809,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:physics-museum':         // Physics Museum
     case 'grinnell:grinnell-in-china':      // Grinnell In China
     case 'grinnell:ancient-coins':          // Ancient Coins
+    case 'grinnell:digital-stories-social-justice':   // Digital Stores for Social Justice
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
