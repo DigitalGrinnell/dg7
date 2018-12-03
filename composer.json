@@ -1,0 +1,28 @@
+{
+    "name": "digitalgrinnell/dg7",
+    "description": "Drupal custom module for Digital.Grinnell.edu",
+    "type": "drupal-custom-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Mark A. McFate",
+            "role": "Creator"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/7"
+        }
+    ],
+    "package": {
+        "name": "dg7",
+        "version": "dev-master",
+        "type":"drupal-custom-module",
+        "source": {
+            "url": "https://github.com/DigitalGrinnell/dg7.git",
+            "type": "git",
+            "reference": "master"
+        }
+    }
+}
