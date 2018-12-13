@@ -1186,6 +1186,11 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
  *
  */
 function dg7_print_awstats($pid) {
+  return "AWSTATS info was disabled for ISLE compatiabilty on 13-Dec-2018.  Look at Google Analytics for future info."
+  }
+  
+/*
+* Commenting this out to remove 'icu' requirement on 13-Dec-2018
   list($visits6, $visits7, $downloads6, $downloads7) = dg7_return_awstats($pid, TRUE);
   $leadIn = "This content, $pid, has been visited";
 
@@ -1214,6 +1219,7 @@ function dg7_print_awstats($pid) {
   $visits .= ".";
 
   return "$leadIn $visits";
+*/
 
 }
 
@@ -1229,7 +1235,9 @@ function dg7_print_awstats($pid) {
  * @param string $pid - The target object PID.
  * @return array - Four integers, in order: 1) number of legacy DG6 visits, 2) number of DG7 visits,
  *                   3) number of DG6 downloads, and 4) number of DG7 downloads.
- */
+ *
+ *  Commenting this out to remove 'icu' requirement on 13-Dec-2018
+ *
 function dg7_return_awstats($pid) {
   module_load_include('inc', 'icu', 'object_record');
   if (is_null($pid) || stripos($pid, ':') < 2) { return array(0, 0, 0, 0); }
@@ -1288,6 +1296,8 @@ function dg7_return_awstats($pid) {
 
   return array($visits6[0], $visits7[0] + 1, $downloads6[0], $downloads7[0]);
 }
+
+*/
 
 
 /**
