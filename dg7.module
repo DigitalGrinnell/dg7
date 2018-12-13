@@ -1219,9 +1219,8 @@ function dg7_print_awstats($pid) {
   $visits .= ".";
 
   return "$leadIn $visits";
-*/
 
-}
+} */
 
 /**
  * Returns a count of page visits to the page(s) associated with the specified object $pid.
