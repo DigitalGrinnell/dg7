@@ -1186,7 +1186,7 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
  *
  */
 function dg7_print_awstats($pid) {
-  return "AWSTATS info was disabled for ISLE compatiabilty on 13-Dec-2018.  Look at Google Analytics for future info."
+  return "AWSTATS info was disabled for ISLE compatiabilty on 13-Dec-2018.  Look at Google Analytics for future info.";
   }
   
 /*
