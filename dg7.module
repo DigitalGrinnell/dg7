@@ -67,11 +67,11 @@ function dg7_views_default_views( ) {
   $collections = dg7_collections_list( );
   watchdog("dg7_views_default_views", '<pre>' . print_r( $collections, true) . '</pre>');
   
-  $collections["islandora:root"]['banner'] = 'Welcome to Digital Grinnell';
-  $collections["grinnell:special-collections"]['banner'] = 'Special Collections and Archives';
-  $collections["grinnell:scholarship"]['banner'] = "Scholarship at Grinnell";
-  $collections["grinnell:campus-collections"]['banner'] = "Grinnell College Campus Collection";
-  $collections["grinnell:phpp"]['banner'] = "Poweshiek History Preservation Project";
+  $collections['islandora:root']['banner'] = 'Welcome to Digital Grinnell';
+  $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
+  $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
+  $collections['grinnell:campus-collections']['banner'] = "Grinnell College Campus Collection";
+  $collections['grinnell:phpp']['banner'] = "Poweshiek History Preservation Project";
 
   // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'dg7_Collection' view.", 'info'); }
 
