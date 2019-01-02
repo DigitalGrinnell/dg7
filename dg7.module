@@ -63,7 +63,9 @@ function dg7_views_default_views( ) {
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
-  $collections = dg7_collections_list();
+  $collections = array( );
+  $collections = dg7_collections_list( );
+  watchdog("dg7_views_default_views", '<pre>' . print_r( $collections, true) . '</pre>');
   $collections['islandora:root']['banner'] = 'Welcome to Digital Grinnell';
   $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
   $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
