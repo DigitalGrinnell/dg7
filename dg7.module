@@ -66,7 +66,7 @@ function dg7_views_default_views( ) {
   $collections = array( );
   $collections = dg7_collections_list( );
   watchdog("dg7_views_default_views", '<pre>' . print_r( $collections, true) . '</pre>');
-  
+
   $collections['islandora:root']['banner'] = 'Welcome to Digital Grinnell';
   $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
   $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
@@ -1191,7 +1191,7 @@ function dg7_controls_add_an_annotation($pid, $tabToCopy) {
 function dg7_print_awstats($pid) {
   return "AWSTATS info was disabled for ISLE compatiabilty on 13-Dec-2018.  Look at Google Analytics for future info.";
   }
-  
+
 /*
 * Commenting this out to remove 'icu' requirement on 13-Dec-2018
   list($visits6, $visits7, $downloads6, $downloads7) = dg7_return_awstats($pid, TRUE);
@@ -2288,10 +2288,17 @@ function dg7_islandora_bagit_filter_batch($pid) {
  *   On success, a single array element LOCAL path like /mnt/storage/exmample.xml
  *
  * Important!  This function requires that your target directory of files be mounted to
- *   the host server as $target (see below).  The mount statement should look something
+ *   the HOST server as $target (see below).  The mount statement should look something
  *   like this:
  *
  *  sudo mount -t cifs -o username=mcfatem //storage.grinnell.edu/LIBRARY/mcfatem/PHPP_Content /mnt/storage
+ *
+ * And in an ISLE environment, you need an additonal Volume/bind-mount statement in your
+ *   docker-compose.yml, or a suitable override, like so:
+ *
+ *   apache:
+ *     volumes:
+ *       - /mnt/storage:/mnt/storage
  *
  */
 function dg7_islandora_multi_importer_remote_file_get($url) {
@@ -2439,4 +2446,3 @@ function dg7_islandora_batch_object_processed($ingest_object, $state) {
     $message['result'] = $system->mail($message);
   } */
 }
-
