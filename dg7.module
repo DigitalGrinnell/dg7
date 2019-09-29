@@ -16,6 +16,11 @@
 
 define('ISLANDORA_ISMEMBEROFCOLLECTION_PREDICATE', 'RELS_EXT_isMemberOfCollection_uri_ms');
 
+function p($item) {
+  drupal_set_message('<pre>' . print_r($item, true) . '</pre>');
+}
+
+
 /**
  * Important!
  *
@@ -540,8 +545,16 @@ function dg7_preprocess(&$variables, $hook) {
 function dg7_form_alter(&$form, &$form_state, $form_id) {
   global $user;
 
+  // p($form_id);
+  // p($form_state);
+  // p($form);
+
   // The big switch...
   switch($form_id) {
+
+    case 'islandora_multi_importer_form':
+      // dg7_form_islandora_multi_importer_form_alter($form, $form_state, $form_id);
+      break;
 
     // User login form
     case 'user_login_block':          // MAM...20-Jan-2016... Do NOT block the user/login page!
@@ -567,11 +580,6 @@ function dg7_form_alter(&$form, &$form_state, $form_id) {
     case 'islandora_solr_advanced_search_form':
       dg7_islandora_solr_advanced_search_form_alter_helper($form);
       break;
-
-    /* islandora_multi_importer_form
-    case 'islandora_multi_importer_form':
-      islandora_multi_importer_form_restore_selections($form);
-      break;  */
 
   }
 
@@ -2288,8 +2296,8 @@ function dg7_islandora_bagit_filter_batch($pid) {
  *   On success, a single array element LOCAL path like /mnt/storage/exmample.xml
  *
  * Important!  This function requires that your target directory of files be mounted to
- *   the HOST server as $target (see below).  The mount statement should look something
- *   like this:
+ *   the HOST server, or your Apache container in the case of ISLE, as $target (see below).
+ *   The mount statement should look something like this:
  *
  *  sudo mount -t cifs -o username=mcfatem //storage.grinnell.edu/LIBRARY/mcfatem/PHPP_Content /mnt/storage
  *
@@ -2298,7 +2306,9 @@ function dg7_islandora_bagit_filter_batch($pid) {
  *
  *   apache:
  *     volumes:
- *       - /mnt/storage:/mnt/storage
+ *       - /host/path/to/object/files:/mnt/storage
+ *
+ *   See https://static.grinnell.edu/blogs/McFateM/posts/046-dg-fedora-a-portable-object-repository/ for more detail.
  *
  */
 function dg7_islandora_multi_importer_remote_file_get($url) {
@@ -2318,7 +2328,7 @@ function dg7_islandora_multi_importer_remote_file_get($url) {
   // Nothing found...report and return an empty array.
 
   if (empty($file)) {
-    $msg .= "and was unable to find a file matching '$url' in '$target' for ingest. ";
+    $msg .= "and was unable to find a file matching '$basename' in '$target' for ingest. ";
     $msg .= "Make sure that you have mounted your files as '$target', and that they can be read by 'www-data'! ";
     $msg .= "See https://github.com/DigitalGrinnell/dg7/blob/master/README.md for additional details.";
     drupal_set_message($msg, 'warning');
@@ -2445,4 +2455,171 @@ function dg7_islandora_batch_object_processed($ingest_object, $state) {
     // Send e-mail.
     $message['result'] = $system->mail($message);
   } */
+
 }
+
+
+/**
+ * Implements hook_form_FORM_ID_alter.
+ *
+ * This function implements hook_form_FORM_ID_alter where FORM_ID is 'islandora_multi_importer_form` with intent
+ *   to set #default_value option selections to the usual defaults required for ingest of new objects using
+ *   TWIG template "Digital_Grinnell_MODS_Master.twig Revision 14".
+ *
+ * @param $form
+ * @param $form_state
+ * @param $form_id
+ */
+function dg7_form_islandora_multi_importer_form_alter(&$form, &$form_state, $form_id) {
+  global $user;
+
+  // Attention!  Update $mods_template here to the name given to the current DG MODS Master TWIG.
+  $mods_template_name = "Digital_Grinnell_MODS_Master.twig Revision 14";
+
+  // Define some arrays for frequent re-use.
+  $default_XSLT = array('default XSLT' => 'xslt|0');
+  $mods_template = array($mods_template_name => 'template|'.$mods_template_name);
+  $build_derivative_from_OBJ = array('Build using derivative from OBJ' => 'derivative|0');
+  $build_using_islandora_derivative = array('Build using islandora generated derivative' => 'derivative|0');
+  $build_derivative_from_PHOTO = array('Build using derivative from PHOTO' => 'derivative|0');
+  $obj = array('OBJ' => 'column|6');
+  $transcript = array('TRANSCRIPT' => 'column|7');
+  $thumbnail = array('TN' => 'column|8');
+  $workspace = array('WORKSPACE' => 'column|1');  // this column is generally EMPTY
+
+  // Use these to dump form data structures.
+  // p($form_id);
+  // p($form_state);
+  // p($form);
+
+  // Always choose the current DG MODS Master TWIG template
+  $form['step4']['group_tabs']['group_twig_tab']['savemenu']['template_chooser']['template_list']['#default_value'] = $mods_template;
+
+  // Always find the object's CModel in the 'cmodel' column, #4
+  $form['cmodelmap']['basemapping']['rows']['cmodelmap_row']['cmodelmap']['#default_value'] = array('cmodel' => '4');
+
+  // For compoundCModel...
+  $cm = 'islandora:compoundCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+
+  // For sp_large_image_cmodel...
+  $cm = 'islandora:sp_large_image_cmodel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['JPG']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['JP2']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For sp_pdf...
+  $cm = 'islandora:sp_pdf';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PDFA']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['FULL_TEXT']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PREVIEW']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For binaryObjectCModel...
+  $cm = 'islandora:binaryObjectCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+
+  // For sp_basic_image...
+  $cm = 'islandora:sp_basic_image';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MEDIUM_SIZE']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For oralhistoriesCModel...
+  $cm = 'islandora:oralhistoriesCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TRANSCRIPT']['method']['data']['#default_value'] = $transcript;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OGG']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MKV']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TECHMD_FITS']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MP4']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PROXY_MP3']['method']['data']['#default_value'] = $workspace;
+
+  // For sp_videoCModel...
+  $cm = 'islandora:sp_videoCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OGG']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MKV']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TECHMD_FITS']['method']['data']['#default_value'] = $workspace;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MP4']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For sp-audioCModel...
+  $cm = 'islandora:sp-audioCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PROXY_MP3']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For bookCModel...
+  $cm = 'islandora:bookCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PDF']['method']['data']['#default_value'] = $build_using_islandora_derivative;
+
+  // For pageCModel...
+  $cm = 'islandora:pageCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['JP2']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['JPG']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OCR']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['HOCR']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+
+  // For collectionCModel...
+  $cm = 'islandora:collectionCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+
+  // For sp_disk_image...
+  $cm = 'islandora:sp_disk_image';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TECHMD_DFXML']['method']['data']['#default_value'] = $build_derivative_from_OBJ;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['PHOTO']['method']['data']['#default_value'] = $thumbnail;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['JPG']['method']['data']['#default_value'] = $build_derivative_from_PHOTO;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $build_derivative_from_PHOTO;
+
+  // For sp_web_archive...
+  $cm = 'islandora:sp_web_archive';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['OBJ']['method']['data']['#default_value'] = $obj;
+
+  // For newspaperCModel...
+  $cm = 'islandora:newspaperCModel';
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['DC']['method']['data']['#default_value'] = $default_XSLT;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['MODS']['method']['data']['#default_value'] = $mods_template;
+  $form['cmodelmap']['cmodels'][$cm]['dsid']['rows']['TN']['method']['data']['#default_value'] = $thumbnail;
+
+  // Finally, the 'objectmap' portion of the form...
+  $form['objectmap']['objectmapping']['rows']['parentmap_row']['parentmap']['#default_value'] = array('parent' => '3');
+  $form['objectmap']['objectmapping']['rows']['labelmap_row']['labelmap']['#default_value'] = array('title' => '9');
+  $form['objectmap']['objectmapping']['rows']['sequencemap_row']['sequencemap']['#default_value'] = array('sequence' => '5');
+  $form['objectmap']['objectmapping']['rows']['dsmap_row']['dsremote']['#default_value'] = array('local*' => 'LOCAL');
+
+  return;
+
+  }
