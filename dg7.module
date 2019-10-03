@@ -813,7 +813,6 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:phpp-ghm':               // PHPP Grinnell Historical Museum
     case 'grinnell:college-history':        // The Early College History collection
     case 'grinnell:college-handbooks':      // The College Handbooks collection
-    case 'grinnell:jimmy-ley':              // The Jimmy Ley Collection
     case 'grinnell:gwcc':                   // The George Washington Cook Correspondence
     case 'grinnell:postcards':              // Historic Iowa Postcards
     case 'grinnell:geology':                // Geology (Fossils) Collection
@@ -822,6 +821,14 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:ancient-coins':          // Ancient Coins
     case 'grinnell:digital-stories-social-justice':   // Digital Stores for Social Justice
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
+      $isq->solrParams['sort'] .= ', fgs_label_s asc';
+      break;
+
+    // Sort by date (index), otherDate, then label.
+
+    case 'grinnell:jimmy-ley':              // The Jimmy Ley Collection
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
+      $isq->solrParams['sort'] .= ', mods_originInfo_dateOther_ms asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
       break;
 
