@@ -50,33 +50,37 @@ function dg7_views_default_views( ) {
   $update = (!$view && variable_get('maintenance_mode', 0));
 
   if (!$update) {  // call is not from within maintenance mode...do nothing here!
-    watchdog('dg7','dg7_views_default_views has been called but not in MAINTENANCE MODE, or dg7_collection already exists, so the view will NOT be updated.', NULL,WATCHDOG_NOTICE);
+    watchdog('dg7','dg7_views_default_views has been called but not in MAINTENANCE MODE, or dg7_collection already exists, so the view will NOT be updated.', NULL, WATCHDOG_NOTICE);
     return;
   } else {
     $msg = 'dg7_views_default_views has been called in MAINTENANCE MODE and dg7_collection does not exist so it will be created.';
-    watchdog('dg7',$msg, NULL,WATCHDOG_NOTICE);
+    watchdog('dg7',$msg, NULL, WATCHDOG_NOTICE);
     drupal_set_message($msg);
     drupal_set_message("Note that you MUST alter the new dg7_Collection view in order to secure the new definitions in the database!  It's easy, just edit the view and update all display titles to be empty.  Do NOT delete the existing dg7_Collection view again unless you want to force an update from this code in MAINTENACE MODE!", 'warning');
   }
 
-  // On DGAdmin ONLY, append "/manage" to all tile links.
+  /* On DGAdmin ONLY, append "/manage" to all tile links.
   if ($_SERVER['SERVER_NAME'] === 'dgadmin.grinnell.edu') {
     $manage = "/manage";
   } else {
     $manage = "";
-  }
+  } */
 
   // The following collections have their own landing pages (they do not use the default).  Defining a
   //   banner element for each causes their pages to render a grid of thumbnails rather than the default list view.
   $collections = array( );
-  $collections = dg7_collections_list( );
-  watchdog("dg7_views_default_views", '<pre>' . print_r( $collections, true) . '</pre>');
+  if (!$collections = dg7_collections_list( )) {
+    watchdog('dg7','dg7_views_default_views call to dg7_collections_list() has failed.', NULL, WATCHDOG_NOTICE);
+    return;
+  } ;
 
-  $collections['islandora:root']['banner'] = 'Welcome to Digital Grinnell';
-  $collections['grinnell:special-collections']['banner'] = 'Special Collections and Archives';
-  $collections['grinnell:scholarship']['banner'] = "Scholarship at Grinnell";
-  $collections['grinnell:campus-collections']['banner'] = "Grinnell College Campus Collection";
-  $collections['grinnell:phpp']['banner'] = "Poweshiek History Preservation Project";
+  watchdog('dg7_views_default_views', '<pre>' . print_r($collections, true) . '</pre>', NULL, WATCHDOG_NOTICE);
+
+  $collections["islandora:root"]["banner"] = "Welcome to Digital Grinnell";
+  $collections["grinnell:special-collections"]["banner"] = "Special Collections and Archives";
+  $collections["grinnell:scholarship"]["banner"] = "Scholarship at Grinnell";
+  $collections["grinnell:campus-collections"]["banner"] = "Grinnell College Campus Collection";
+  $collections["grinnell:phpp"]["banner"] = "Poweshiek History Preservation Project";
 
   // if (user_access('administer')) { drupal_set_message("Attention: dg7_views_default_views_alter is now overriding the 'dg7_Collection' view.", 'info'); }
 
@@ -386,7 +390,13 @@ jQuery( window ).resize(function() {
  */
 function dg7_collections_list( ) {
 
-  $solr = new IslandoraSolrQueryProcessor( );
+  if (!$solr = new IslandoraSolrQueryProcessor( )) {
+    $msg = "IslandoraSolrQueryProcessor() failed to initialize in dg7_collections_list().";
+    drupal_set_message($msg, 'error');
+    watchdog("dg7", $msg);
+    return FALSE;
+  }
+
   $query = "RELS_EXT_hasModel_uri_s:info\:fedora/islandora\:collectionCModel";
   $solr->buildQuery($query);
   $solr->solrLimit = "99";  // must be greater than total number of collections AND it must be set between buildQuery and executeQuery!
@@ -395,30 +405,34 @@ function dg7_collections_list( ) {
   $numFound = $response['numFound'];
 
   if ($numFound < 1) {
-    return "Error searching Solr index in " . __FUNCTION__ . ".";
-
-  } else {
-    $collections = array( );
-    $objects = $response['objects'];
-    foreach ($objects as $obj) {
-      $pid = $obj['PID'];
-      $collections[$pid] = array( 'label' => $obj['object_label'], 'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
-      if (isset($obj['solr_doc']['dc.description'])) {
-        $collections[$pid] ['abstract'] = $obj['solr_doc']['dc.description'][0];
-      } else {
-        $msg = "Collection $pid has no dc.description in " . __FUNCTION__ . ".";
-        drupal_set_message($msg, 'warning');
-      }
-      $collections[$pid]['id'] = "display_" . $pid;
-      $collections[$pid]['title'] = "display_" . $pid;
-      $collections[$pid]['description'] = "display_" . $pid;
-    }
-
-    // Make sure we have a $collections[] entry for islandora:root!
-    $collections['islandora:root'] = array( 'id' => 'display_islandora:root', 'title' => 'display_islandora:root', 'description' => 'display_islandora:root', 'label' => 'Welcome to Digital Grinnell', 'path' => 'islandora/object', 'abstract' => 'Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.' );
-
-    return $collections;
+    $msg = "Solr query response is: \n" . print_r($response);
+    drupal_set_message($msg, 'warning');
+    $msg = "Error searching Solr index in " . __FUNCTION__ . ".";
+    drupal_set_message($msg, 'error');
+    return FALSE;
   }
+
+  $collections = array( );
+  $objects = $response['objects'];
+  foreach ($objects as $obj) {
+    $pid = $obj['PID'];
+    $collections[$pid] = array( 'label' => $obj['object_label'], 'path' => $obj['object_url'], 'thumbnail' => $obj['thumbnail_url']);
+    if (isset($obj['solr_doc']['dc.description'])) {
+      $collections[$pid] ['abstract'] = $obj['solr_doc']['dc.description'][0];
+    } else {
+      $msg = "Collection $pid has no dc.description in " . __FUNCTION__ . ".";
+      drupal_set_message($msg, 'warning');
+    }
+    $collections[$pid]['id'] = "display_" . $pid;
+    $collections[$pid]['title'] = "display_" . $pid;
+    $collections[$pid]['description'] = "display_" . $pid;
+  }
+
+  // Make sure we have a $collections[] entry for islandora:root!
+  $collections['islandora:root'] = array( 'id' => 'display_islandora:root', 'title' => 'display_islandora:root', 'description' => 'display_islandora:root', 'label' => 'Welcome to Digital Grinnell', 'path' => 'islandora/object', 'abstract' => 'Digital Grinnell contributes to “free inquiry and the open exchange of ideas” through the preservation and publication of scholarship created by Grinnell College students, faculty, and staff, as well as selected material that illuminates the College’s history and other activities.' );
+
+  return $collections;
+
 }
 
 
