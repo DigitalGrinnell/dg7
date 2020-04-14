@@ -25,9 +25,9 @@ discarded when this transform is applied!
 
   <xsl:template match="node()|@*">
     <xsl:copy>
-      <xsl:copy-of select="mods:name[mods:role/mods:roleTerm[text()='creator' or text()='author' or text()='artist']]"/>
       <xsl:copy-of select="mods:titleInfo[not(@*)]" />
       <xsl:copy-of select="mods:titleInfo[@type='alternative']" />
+      <xsl:copy-of select="mods:name[mods:role/mods:roleTerm[text()='creator' or text()='author' or text()='artist']]"/>
       <xsl:copy-of select="mods:name[mods:role/mods:roleTerm[text()!='creator' and text()!='author' and text()!='artist']]"/>
       <xsl:copy-of select="mods:abstract"/>
       <xsl:copy-of select="mods:originInfo"/>
