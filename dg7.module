@@ -843,7 +843,7 @@ function dg7_islandora_solr_query_alter(&$isq) {
     case 'grinnell:recent-art-acquisitions':  // The Faulconer's Recent Acquisitions sub-collection
     case 'grinnell:faulconer-suppressed':
     case 'grinnell:studio-student-art':       // Studio Student Art sub-collection
-    case 'grinnell:db2d':                     // Digital Bridges to Dance sub-collection
+    // case 'grinnell:db2d':                  // Digital Bridges to Dance sub-collection...reverted back to default sort on 8-Jul-2020
       $isq->solrParams['sort'] .= ', mods_extension_creators_ss asc';
       $isq->solrParams['sort'] .= ', mods_originInfo_dateCreated_sort asc';
       $isq->solrParams['sort'] .= ', fgs_label_s asc';
