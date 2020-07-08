@@ -12,7 +12,7 @@
 */
 
 function dg7_views_query_alter(&$view, &$query) {
-  drupal_set_message(__FUNCTION__.' from /includes/views/dg7.views.inc called.', 'status');
+  // drupal_set_message(__FUNCTION__.' from /includes/views/dg7.views.inc called.', 'status');
 
   // If this is not a "collection" view... return unaltered.
   $viewName = $view->name;
